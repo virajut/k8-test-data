@@ -16,7 +16,7 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
 - The final objective is to be able to to support - 4 Million files with an average file size of 10 Mbs. However at start we will start with Github repo. 
   - Scrapper to be designed to fetch files from Glasswall repositories and other public repositories. 
   - A File Validator to validate the malacious content of the file. 
-  - A File Handler to persit the files to Github repository. 
+  - A File Handler to persist the files to Github repository. 
   - Dynamic generation of files , based on programmatically modifications of content, structure and capabilities.
   
 Malware Public Repositories ( Proceed with caution when handling live malware) :
