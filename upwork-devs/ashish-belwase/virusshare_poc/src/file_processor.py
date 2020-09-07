@@ -1,5 +1,5 @@
-from file_service import FileService
-from glasswall_service import GlasswallService
+from src.file_service import FileService
+from src.glasswall_service import GlasswallService
 
 
 class FileProcessor:

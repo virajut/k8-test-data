@@ -3,7 +3,7 @@ import os
 
 class FileService:
 
-    UPLOAD_DIR = "static"
+    UPLOAD_DIR = "/usr/src/app/src/static"
 
     @staticmethod
     def upload_to_s3(file):
