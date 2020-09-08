@@ -1,1 +1,1 @@
-from scrapers.virusshare import VSScraper
+from src.scrapers.virusshare import VSScraper

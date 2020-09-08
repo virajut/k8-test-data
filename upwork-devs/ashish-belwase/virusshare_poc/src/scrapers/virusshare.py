@@ -3,7 +3,7 @@ from .base import BaseScraper
 
 
 class VSScraper(BaseScraper):
-    def __init__(self, api_key, request_mode="download"):
+    def __init__(self, api_key="", request_mode="download"):
         self.url = "https://virusshare.com/apiv2/{}?apikey={}&hash={}"
         self.hash_url = "https://virusshare.com/hashfiles/unpacked_hashes.md5"
         self.request_mode = request_mode

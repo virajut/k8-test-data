@@ -3,7 +3,7 @@ import os
 
 class FileService:
 
-    UPLOAD_DIR = "static"
+    UPLOAD_DIR = os.environ.get("STATIC_PATH", "src/static")
 
     @staticmethod
     def upload_to_s3(file):
@@ -17,4 +17,6 @@ class FileService:
         d = FileService.UPLOAD_DIR
         if not os.path.exists(d):
             os.makedirs(d)
-        file.save(f"{d}/{file.filename}")
+        path = f"{d}/{file.filename}"
+        file.save(path)
+        return path
