@@ -2,7 +2,12 @@
 
 ### Usage
 
+## Run app
+
 `python main.py`
+
+## Run test cases
+`python -m unittest`
 
 ### Endpoints
 
