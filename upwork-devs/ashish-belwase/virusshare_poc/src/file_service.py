@@ -17,4 +17,6 @@ class FileService:
         d = FileService.UPLOAD_DIR
         if not os.path.exists(d):
             os.makedirs(d)
-        file.save(f"{d}/{file.filename}")
+        path = f"{d}/{file.filename}"
+        file.save(path)
+        return path

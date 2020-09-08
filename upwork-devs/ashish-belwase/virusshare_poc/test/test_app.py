@@ -32,9 +32,22 @@ class AppTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(response.get_json(), expected)
 
-    def test_check_malicious(self):
+    @patch("src.integrations.virustotal.Virustotal.validate_response")
+    def test_check_malicious(self, mocked_resp):
         endpoint = "/check-malicious"
-        expected = {"is_malicious": False}
+        mocked_resp.return_value = expected = {
+                    'json_resp': {
+                        'md5': '5058f1af8388633f609cadb75a75dc9d',
+                        'permalink': 'https://www.virustotal.com/gui/file/cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8/detection/f-cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8-1599537072',
+                        'resource': 'cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8',
+                        'response_code': 1,
+                        'scan_id': 'cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8-1599537072',
+                        'sha1': '3a52ce780950d4d969792a2559cd519d7ee8c727',
+                        'sha256': 'cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8',
+                        'verbose_msg': 'Scan request successfully queued, come back later for the report'
+                        },
+                    'status_code': 200
+                    }
 
         response = self.client.post(endpoint, data={})
         self.assertEqual(response.status_code, 400)
@@ -45,7 +58,6 @@ class AppTestCase(BaseTestCase):
             content_type="multipart/form-data",
             data={"file": (BytesIO(b"."), "sample.txt")},
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(expected, response.get_json())
 

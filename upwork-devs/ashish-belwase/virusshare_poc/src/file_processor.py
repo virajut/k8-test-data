@@ -5,8 +5,7 @@ from src.glasswall_service import GlasswallService
 class FileProcessor:
     @staticmethod
     def process(file):
-        file_info = {}
-        FileService.save_file(file)
+        f = FileService.save_file(file)
         FileService.upload_to_s3(file)
-        file_info["is_malicious"] = GlasswallService.check_malicious(file)
+        file_info = GlasswallService.check_malicious(f)
         return file_info
