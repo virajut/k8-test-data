@@ -1,4 +1,3 @@
-
 from .base import BaseScraper
 import urllib.request, urllib.error, urllib.parse
 from time import sleep
@@ -8,16 +7,10 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 
-
-
-
 class Scraper(BaseScraper):
     def __init__(self):
-
         self.base_url = "https://cloud.corvusforensics.com"
         self.url = 'https://cloud.corvusforensics.com/s/HDcCHLnQTGBnYBN'
-
-
 
     def scrape_file(self):
         cwd = os.getcwd()
@@ -43,23 +36,21 @@ class Scraper(BaseScraper):
 
         soup = BeautifulSoup(html, features="lxml")
         soup.prettify()
-        gdp_table = soup.find("table", attrs={"class": "list-container"})
-        gdp_table_data = gdp_table.tbody.find_all("tr")  # contains 2 rows
+        vs_table = soup.find("table", attrs={"class": "list-container"})
+        vs_table_data = vs_table.tbody.find_all("tr")  # contains 2 rows
 
-        for td in gdp_table_data:
+        for td in vs_table_data:
             x = td.find_all("td")
             zip_url = x[1].find_all("a")[0]['href']
             links = self.base_url + zip_url
             if links.endswith(extension):
                 newfile.write(links + '\n')
         newfile.close()
-
         newfile = open('zipfiles.txt', 'r')
         for line in newfile:
             print(line + '/n')
         newfile.close()
         self.save(download_path)
-
         return download_path
 
     def save(self,path):
