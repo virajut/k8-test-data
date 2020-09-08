@@ -1,6 +1,5 @@
 import requests
 
-
 class BaseScraper:
 
     headers = {

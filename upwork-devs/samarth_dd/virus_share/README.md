@@ -23,14 +23,8 @@ See screenshot ![minio](minio.png)
 - User: minio
 - Password: minio123
 
-
-
-
 ```bash
 docker build . -t virusshare
-
-
-
 
 ```
 

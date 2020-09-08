@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 from scrapers import Scraper
 
