@@ -14,14 +14,17 @@ class Scraper(scrapy.Spider):
         super().__init__(*args, **kwargs)
 
     """ scrapy starts crawling by calling this method """
+
     def start_requests(self):
         pass
 
     """ method to extract or parse data required to login """
+
     def prepare_login_request(self, response):
         pass
 
     """ generic login request method """
+
     def login(self, token, url, callback_method, config):
 
         self.logger.debug("Scraper::login::Authenticating with login url: %s" % url)
@@ -45,6 +48,7 @@ class Scraper(scrapy.Spider):
         )
 
     """ Callback Handler for different errors occurred while making requests """
+
     def errback_handler(self, failure):
         self.logger.error(repr(failure))
 
@@ -67,8 +71,8 @@ class Scraper(scrapy.Spider):
 
     """ method to check if login successful or not, can be overridden in derived class if 
     required for that crawler """
-    def is_authenticated(self, response):
 
+    def is_authenticated(self, response):
         response_dict = json.loads(response.text)
 
         if response_dict["success"]:
@@ -79,14 +83,17 @@ class Scraper(scrapy.Spider):
             raise CloseSpider(reason="Login failed.")
 
     """ Once authenticated, request goes into this method for navigating to required pages """
+
     def navigate_to(self, response):
         pass
 
     """ Method for crawling a page once navigation done """
+
     def parser(self, response):
         pass
 
     """ method to write response data into a local file"""
+
     def write_data(self, filename, data, ftype):
         with open(filename, 'w') as f:
             if ftype == 'json':

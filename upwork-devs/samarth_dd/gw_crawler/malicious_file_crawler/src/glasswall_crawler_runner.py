@@ -1,7 +1,7 @@
 """ Main class for initializing and running crawlers. """
-
 import os
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from scrapy.exceptions import CloseSpider
 from scrapy.crawler import CrawlerProcess
@@ -10,8 +10,8 @@ from malicious_file_crawler.src.utils.read_config import ConfigReader
 
 
 class GlassWallRunner(object):
-
     """ Initialize crawler with project settings """
+
     def __init__(self, *spidercfg):
         settings_file_path = "malicious_file_crawler.src.settings"
         os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
@@ -25,6 +25,7 @@ class GlassWallRunner(object):
         self.spidercfg = spidercfg
 
     """ Get all the sites to crawl from config file """
+
     def get_sites_to_run(self, scrape_site=None):
 
         if scrape_site is None:
@@ -53,14 +54,13 @@ class GlassWallRunner(object):
         return site_cfg
 
     """ Instantiate crawler for every site with respective configuration, start crawler engine """
-    def run_spiders(self, cfg, data=None):
 
+    def run_spiders(self, cfg, data=None):
         spider = cfg.get('name')
         self.process.crawl(spider, config=cfg, data=data)
         self.process.start()  # the script will block here until crawling is finished
 
     def main(self, site_arr):
-
         for site, cfg in site_arr.items():
             """ run crawler for every site and get response list """
             self.run_spiders(cfg)
@@ -68,18 +68,18 @@ class GlassWallRunner(object):
 
 if __name__ == '__main__':
 
-
     scraper = GlassWallRunner()
 
     """ get site list and corresponding config into a dictionary """
 
-    if len(sys.argv)==2:
+    if len(sys.argv) == 2:
 
         scrape_site = sys.argv[1]
+        print("S")
+        print(scrape_site)
         site_list = scraper.get_sites_to_run(scrape_site=scrape_site)
 
     else:
         site_list = scraper.get_sites_to_run()
     print("in main")
     scraper.main(site_list)
-
