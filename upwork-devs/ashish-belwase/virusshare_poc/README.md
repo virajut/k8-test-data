@@ -15,7 +15,7 @@
 | -------- | ------------------------| ----------- |
 | `/scrape-vs-file`  | Download a file from VS   | `{"api_key": "","hash"   : ""}` |
 | `/check-malicious` | Check if a file is malicious   | `{"file": "<binary file>"}` |
-| `/check-vs-malicious` | Get all VS malicious files from hash   |  |
+| `/fetch-vs-files` | Get all VS malicious files from hash   |  |
 | `/files` | Get malicious files   | `{"file_type": "txt", "num_files":2}` |	
 
 ## Docker Image

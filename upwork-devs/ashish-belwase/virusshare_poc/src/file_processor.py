@@ -52,10 +52,13 @@ class FileProcessor:
             break
 
         files_to_check = FileProcessor.get_local_files()
-        print(files_to_check)
-        # for f in files_to_check:
-        #     file_info = GlasswallService.check_malicious(f)
-        #     infos.append(file_info)
+        for f in files_to_check:
+            file_info = GlasswallService.check_malicious(f)
+            # if not malicious, remove it
+            if not file_info:
+                os.remove(f)
+
+            infos.append(file_info)
 
         return infos
 

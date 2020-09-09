@@ -41,8 +41,8 @@ def create_app():
         file_info = FileProcessor.process(file)
         return jsonify(file_info)
 
-    @app.route("/check-vs-malicious", methods=["POST"])
-    def check_vs_malicious():
+    @app.route("/fetch-vs-files", methods=["POST"])
+    def fetch_vs_files():
         vs = VSScraper(os.environ.get("vs_api_key", ""))
         hashes = vs.get_demo_hashes()
         output = FileProcessor.process_vs_hash(hashes)
