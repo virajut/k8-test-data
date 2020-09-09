@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Scraper class for getting vehicles from carwave portal """
+
 import scrapy
 import wget
 from scrapy.loader import ItemLoader
@@ -23,9 +23,7 @@ options.add_experimental_option("prefs", prefs)
 
 class GlasswallScraper(Scraper):
     name = 'glasswall_spider'
-    # allowed_domains = ['carwave.com']
 
-    # Allow duplicate url request (we will be crawling "page 1" twice)
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
