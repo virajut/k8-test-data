@@ -31,7 +31,7 @@ To push
 
 To run the aforementioned built image run:
 
-`docker run -p 5000:5000 -it --rm k8-test-data`
+`docker run -e vs_zip_pwd=<pwd> -e PYTHONUNBUFFERED=0 -e virustotal_key=<key> -e vs_api_key=<key> -p 5000:5000 -it --rm k8-test-data`
 
 
 ## Kubernetes
