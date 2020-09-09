@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 
 from src.file_processor import FileProcessor
 from src.scrapers import VSScraper
@@ -47,5 +47,20 @@ def create_app():
         hashes = vs.get_demo_hashes()
         output = FileProcessor.process_vs_hash(hashes)
         return jsonify(output)
+
+    @app.route("/files", methods=["POST"])
+    def get_files():
+        data = request.json
+        file_type = data.get("file_type", None)
+        if not file_type:
+            return jsonify({"message": "file_type not supplied"})
+        num_files = data.get("num_files", 1)
+        output_file = FileProcessor.get_files(file_type, num_files)
+        if not output_file:
+            return jsonify({"message": "no files present"})
+        else:
+            return send_file(
+                output_file, attachment_filename=output_file, as_attachment=True
+            )
 
     return app

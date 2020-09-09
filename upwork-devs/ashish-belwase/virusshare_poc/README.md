@@ -9,12 +9,14 @@
 ## Run test cases
 `python -m unittest`
 
-### Endpoints
+### Endpoints [ All POST ]
 
 | Endpoint | Description             | Payload     |
 | -------- | ------------------------| ----------- |
 | `/scrape-vs-file`  | Download a file from VS   | `{"api_key": "","hash"   : ""}` |
 | `/check-malicious` | Check if a file is malicious   | `{"file": "<binary file>"}` |
+| `/check-vs-malicious` | Get all VS malicious files from hash   |  |
+| `/files` | Get malicious files   | `{"file_type": "txt", "num_files":2}` |	
 
 ## Docker Image
 
@@ -31,7 +33,7 @@ To push
 
 To run the aforementioned built image run:
 
-`docker run -e vs_zip_pwd=<pwd> -e PYTHONUNBUFFERED=0 -e virustotal_key=<key> -e vs_api_key=<key> -p 5000:5000 -it --rm k8-test-data`
+`docker run -e STATIC_PATH=<static_path> -e vs_zip_pwd=<pwd> -e PYTHONUNBUFFERED=0 -e virustotal_key=<key> -e vs_api_key=<key> -p 5000:5000 -it --rm k8-test-data`
 
 
 ## Kubernetes

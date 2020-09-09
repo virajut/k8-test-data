@@ -1,5 +1,6 @@
 import zipfile
 import os
+import uuid
 
 from src.file_service import FileService
 from src.glasswall_service import GlasswallService
@@ -8,21 +9,33 @@ from src.scrapers import VSScraper
 
 class FileProcessor:
     @staticmethod
-    def get_valid_zip_files(f):
-        files_to_check = []
+    def zip_files(files):
+        fname = VSScraper.download_path + "/" + str(uuid.uuid4()) + ".zip"
+        zipObj = zipfile.ZipFile(fname, "w")
+        for f in files:
+            arcname = f.rsplit("/", 1)[-1]
+            zipObj.write(f, arcname=arcname)
+        zipObj.close()
+        return fname
+
+    @staticmethod
+    def unzip_files(f):
         with zipfile.ZipFile(f, "r") as zp:
             zp.extractall(
-                VSScraper.unzip_path, pwd=bytes(os.environ["vs_zip_pwd"], "utf-8")
+                VSScraper.download_path, pwd=bytes(os.environ["vs_zip_pwd"], "utf-8")
             )
-            for f in os.listdir(VSScraper.unzip_path):
-                if GlasswallService.is_valid_type(f):
-                    files_to_check.append(VSScraper.unzip_path + "/" + f)
-        return files_to_check
+
+    @staticmethod
+    def get_local_files():
+        files = []
+        for f in os.listdir(VSScraper.download_path):
+            if GlasswallService.is_valid_type(f):
+                files.append(VSScraper.download_path + "/" + f)
+        return files
 
     @staticmethod
     def process(file):
         f = FileService.save_file(file)
-        FileService.upload_to_s3(file)
         file_info = GlasswallService.check_malicious(f)
         return file_info
 
@@ -32,15 +45,31 @@ class FileProcessor:
         for h in hashes:
             vs = VSScraper(os.environ["vs_api_key"])
             f = vs.scrape_file(h.strip())
-            files_to_check = []
             if zipfile.is_zipfile(f):
-                files_to_check = FileProcessor.get_valid_zip_files(f)
+                FileProcessor.unzip_files(f)
             else:
-                files_to_check = [f]
+                FileService.save_file(file)
             break
 
-        for f in files_to_check:
-            file_info = GlasswallService.check_malicious(f)
-            infos.append(file_info)
+        files_to_check = FileProcessor.get_local_files()
+        print(files_to_check)
+        # for f in files_to_check:
+        #     file_info = GlasswallService.check_malicious(f)
+        #     infos.append(file_info)
 
         return infos
+
+    @staticmethod
+    def get_files(file_type, num_files):
+        # To Do :  to be replaced by minio file fetch service
+        files = FileProcessor.get_local_files()
+        filtered_files = [f for f in files if file_type in f.rsplit(".", 1)[1]]
+        filtered_files = (
+            filtered_files
+            if num_files > len(filtered_files)
+            else filtered_files[0:num_files]
+        )
+        zipped_file = None
+        if filtered_files:
+            zipped_file = FileProcessor.zip_files(filtered_files)
+        return zipped_file
