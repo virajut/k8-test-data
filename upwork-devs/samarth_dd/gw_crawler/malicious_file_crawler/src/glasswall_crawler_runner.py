@@ -1,8 +1,8 @@
 """ Main class for initializing and running crawlers. """
+import argparse
 import logging
 import os
 import sys
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from scrapy.exceptions import CloseSpider
 from scrapy.crawler import CrawlerProcess
@@ -35,7 +35,6 @@ class GlassWallRunner(object):
 
         else:
             sites_arr = scrape_site.split(",")
-
         site_cfg = {}
 
         # construct site_cfg dictionary: {site_name: site_cfg}
@@ -45,7 +44,6 @@ class GlassWallRunner(object):
                 site_cfg[site] = cfg
             except KeyError as ke:
                 raise CloseSpider
-
         return site_cfg
 
     """ Instantiate crawler for every site with respective configuration, start crawler engine """
@@ -66,7 +64,6 @@ if __name__ == '__main__':
     scraper = GlassWallRunner()
 
     """ get site list and corresponding config into a dictionary """
-
     if len(sys.argv) == 2:
         scrape_site = sys.argv[1]
         site_list = scraper.get_sites_to_run(scrape_site=scrape_site)

@@ -10,7 +10,7 @@ class TestGlassWallCrawlerRunner(TestCase):
         self.process = CrawlerProcess(settings)
         self.runner = GlassWallRunner()
 
-    def test_get_sites_to_run_single(self, scrape_site=None):
+    def test_get_sites_to_run_single(self):
         sites = GlassWallRunner.get_sites_to_run(self, None)
         self.assertEquals(len(sites), 1)
 

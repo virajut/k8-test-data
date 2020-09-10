@@ -9,3 +9,4 @@ class TestUtil(TestCase):
         config = ConfigReader(site.upper()).read_config()
         self.assertIn('corvus',str(config).lower())
         self.assertIsNotNone(config)
+

@@ -12,7 +12,6 @@ class ConfigReader:
 
     def read_config(self):
         try:
-
             config = configparser.ConfigParser()
             config.read(settings.CONFIG_FILE)
             config_ref = config[self.property_name]
