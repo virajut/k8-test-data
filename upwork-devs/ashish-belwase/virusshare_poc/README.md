@@ -40,4 +40,7 @@ To run the aforementioned built image run:
 
 To run through kubernetes
 
-`kubectl apply -f deploy.yaml`
+```
+kubectl apply -f minio_service.yaml
+kubectl apply -f deploy.yaml
+```
