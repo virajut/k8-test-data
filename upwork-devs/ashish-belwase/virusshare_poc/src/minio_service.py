@@ -24,7 +24,7 @@ class Minio:
 
         try:
             file_path = "./"
-            logger.debug("Check if the Bucket {} exists".format(bucket_name))
+            logger.info("Check if the Bucket {} exists".format(bucket_name))
             if self.s3.Bucket(bucket_name) not in self.s3.buckets.all():
                 raise Exception(f"{bucket_name} bucket does not exist")
             bucket = self.s3.Bucket(bucket_name)
@@ -33,7 +33,7 @@ class Minio:
             for files in bucket.objects.all():
                 path, filename = os.path.split(files.key)
                 obj_file = file_path + filename
-                logger.debug("Downloading file {}.".format(filename))
+                logger.info("Downloading file {}.".format(filename))
                 bucket.download_file(files.key, obj_file)
                 files_list.append(obj_file)
                 saved_files += 1
@@ -52,11 +52,11 @@ class Minio:
     def upload_to_minio(self, file_path, bucket_name, filename):
 
         try:
-            logger.debug("Checking if the Bucket to upload files exists or not.")
+            logger.info("Checking if the Bucket to upload files exists or not.")
             if (self.s3.Bucket(bucket_name) in self.s3.buckets.all()) == False:
                 logger.info("Bucket not Found. Creating Bucket.")
                 self.s3.create_bucket(Bucket=bucket_name)
-            logger.debug(
+            logger.info(
                 "Uploading file to bucket {} minio {}".format(bucket_name, self.url)
             )
             self.s3.Bucket(bucket_name).upload_file(file_path, filename)
