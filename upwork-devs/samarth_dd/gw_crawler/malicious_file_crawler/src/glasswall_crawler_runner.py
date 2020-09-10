@@ -1,4 +1,5 @@
 """ Main class for initializing and running crawlers. """
+import logging
 import os
 import sys
 
@@ -8,6 +9,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from malicious_file_crawler.src.utils.read_config import ConfigReader
 
+logger = logging.getLogger("gw:k8-testdata")
 
 class GlassWallRunner(object):
     """ Initialize crawler with project settings """
@@ -15,13 +17,8 @@ class GlassWallRunner(object):
     def __init__(self, *spidercfg):
         settings_file_path = "malicious_file_crawler.src.settings"
         os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
-
-        # print(os.environ["SCRAPY_SETTINGS_MODULE"])
         settings = get_project_settings()  # Scrapy settings
-
         self.process = CrawlerProcess(settings)
-
-        # print(self.process, )
         self.spidercfg = spidercfg
 
     """ Get all the sites to crawl from config file """
@@ -33,7 +30,6 @@ class GlassWallRunner(object):
             try:
                 config_obj = ConfigReader(section).read_config()
                 sites_arr = config_obj['scrape_sites'].split(',')
-                print(sites_arr)
             except KeyError as ke:
                 raise CloseSpider(reason="Error while getting site list from config.")
 
@@ -50,7 +46,6 @@ class GlassWallRunner(object):
             except KeyError as ke:
                 raise CloseSpider
 
-        print(site_cfg)
         return site_cfg
 
     """ Instantiate crawler for every site with respective configuration, start crawler engine """
@@ -73,13 +68,11 @@ if __name__ == '__main__':
     """ get site list and corresponding config into a dictionary """
 
     if len(sys.argv) == 2:
-
         scrape_site = sys.argv[1]
-        print("S")
-        print(scrape_site)
         site_list = scraper.get_sites_to_run(scrape_site=scrape_site)
 
     else:
         site_list = scraper.get_sites_to_run()
-    print("in main")
+
+    logger.info("in main")
     scraper.main(site_list)

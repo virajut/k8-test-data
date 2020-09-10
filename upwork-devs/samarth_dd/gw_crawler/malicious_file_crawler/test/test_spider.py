@@ -16,14 +16,15 @@ class TestGlasswallCrawler(TestCase):
 
     def test_start_requests(self):
         self.url = os.getenv('login_url')
-        content = self.scrapper.start_requests()
-        self.assertIsNotNone(content)
+        response = self.scrapper.start_requests()
+        self.assertIsNotNone(response)
 
     def test_download_files(self):
         content = self.scrapper.download_files(os.getenv('login_url'))
         self.assertIsNotNone(content)
 
     def test_navigate_to(self):
-        url = 'https://cloud.corvusforensics.com/s/HDcCHLnQTGBnYBN'
-        content = self.scrapper.navigate_to(Mock())
+        url = os.environ('file_page_url')
+        response = self.scrapper.navigate_to(Mock())
+        self.assertEquals(response.status_code, 200)
         self.assertIsNotNone(())
