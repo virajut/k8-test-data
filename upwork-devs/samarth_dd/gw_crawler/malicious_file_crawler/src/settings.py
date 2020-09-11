@@ -10,6 +10,13 @@ import os
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
+from dotenv import load_dotenv
+load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Get the path to the directory this file is in
+CURR_DIR = os.path.abspath(os.path.dirname(__file__))
+
 BOT_NAME = 'src'
 
 SPIDER_MODULES = ['src.spiders']
@@ -17,7 +24,6 @@ NEWSPIDER_MODULE = 'src.spiders'
 
 # Config file path
 CONFIG_FILE = os.path.join(BASE_PATH, 'config', 'config.ini')
-# print(BASE_PATH, CONFIG_FILE)
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'malicious_file_crawler (+http://www.yourdomain.com)'
@@ -74,14 +80,22 @@ ITEM_PIPELINES = {
 
 DOWNLOAD_TIMEOUT = 12000
 
-FILES_STORE = '../..'
+MEDIA_ALLOW_REDIRECTS = True
+
+AWS_USE_SSL = False
+AWS_VERIFY = False
+
+AWS_ENDPOINT_URL = os.environ['ENDPOINT']
+FILES_STORE = os.environ['FILES_STORE']
+FILE_STORE_S3_ACL = 'public-read'
+AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+
+AWS_SECRET_ACCESS_KEY= os.environ['AWS_SECRET_ACCESS_KEY']
+# Uncomment this when MINIO service is running
 
 # Uncomment this when MINIO service is running
-# AWS_ENDPOINT_URL = 'http://minio.example.com:9000'
-
 # max download size of 5gb
 DOWNLOAD_MAXSIZE = 5368709120
-
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
@@ -102,3 +116,19 @@ DOWNLOAD_MAXSIZE = 5368709120
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
