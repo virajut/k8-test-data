@@ -14,4 +14,4 @@ jobs:
       - name: Iniatilize the tool
         run: pip install --user safety
       - name: Perform Scan
-        run: python -m safety --help
+        run: find . -name requirements.txt | xargs -I % sh -c 'python -m safety check -r %'
