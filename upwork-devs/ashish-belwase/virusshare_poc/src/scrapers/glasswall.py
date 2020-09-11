@@ -1,8 +1,12 @@
 import csv
 import re
 from bs4 import BeautifulSoup
-from .base import BaseScraper
+import logging
+
 from src.file_service import FileService
+from .base import BaseScraper
+
+logger = logging.getLogger("GW:gw_scraper")
 
 
 class GlasswallScraper(BaseScraper):
@@ -17,8 +21,16 @@ class GlasswallScraper(BaseScraper):
         if response:
             soup = BeautifulSoup(response.content, "lxml")
             pdfs = soup.findAll("a", href=re.compile(r".*.pdf"))
-            print("downloading {} pdfs".format(len(pdfs)))
+            logger.info("downloading {} pdfs".format(len(pdfs)))
             for pdf in pdfs:
                 url = pdf.get("href")
                 f = BaseScraper.get_file_from_url(url)
                 FileService.save_to_minio(f)
+
+    @staticmethod
+    def scrape():
+        """
+        fetch all files from glasswall
+        """
+        logger.info("scraping {}".format(GlasswallScraper.url))
+        GlasswallScraper.download_pdf()

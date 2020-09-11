@@ -1,5 +1,9 @@
 import csv
+
+from src.file_service import FileService
 from .base import BaseScraper
+
+logger = logging.getLogger("GW:gw_scraper")
 
 
 class VSScraper(BaseScraper):
@@ -47,3 +51,16 @@ class VSScraper(BaseScraper):
             "000be57dc7d0013ae5c1cd9cc53c58a8",
             "0015760015829eded58ccc8727fe466f",
         ]
+
+    def process_hashes(self, hashes):
+        for h in hashes:
+            try:
+                f = self.scrape_file(h.strip())
+                FileService.save_to_minio(f)
+            except Exception:
+                continue
+
+    def scrape(self):
+        logger.info("scraping {}".format(self.url))
+        hashes = self.get_demo_hashes()
+        self.process_hashes(hashes)
