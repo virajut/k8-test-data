@@ -3,6 +3,7 @@ import re
 from bs4 import BeautifulSoup
 import logging
 
+from src.config import Config
 from src.file_service import FileService
 from .base import BaseScraper
 
@@ -10,7 +11,7 @@ logger = logging.getLogger("GW:gw_scraper")
 
 
 class GlasswallScraper(BaseScraper):
-    url = "https://glasswallsolutions.com"
+    url = Config.glasswall_url
 
     def __init__(self):
         pass

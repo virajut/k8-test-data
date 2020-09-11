@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_file
 
 from src.file_service import FileService
 from src.scrapers import VSScraper, GlasswallScraper
-
+from src.config import Config
 
 def validation_error(msg):
     return jsonify({"error": msg}), 400
@@ -12,6 +12,7 @@ def validation_error(msg):
 def create_app():
 
     app = Flask(__name__, static_url_path="/src/static")
+    app.config.from_object(Config)
 
     @app.route("/health")
     def health():

@@ -1,6 +1,8 @@
 import csv
+import logging
 
 from src.file_service import FileService
+from src.config import Config
 from .base import BaseScraper
 
 logger = logging.getLogger("GW:gw_scraper")
@@ -8,8 +10,8 @@ logger = logging.getLogger("GW:gw_scraper")
 
 class VSScraper(BaseScraper):
     def __init__(self, vs_api_key="", request_mode="download"):
-        self.url = "https://virusshare.com/apiv2/{}?apikey={}&hash={}"
-        self.hash_url = "https://virusshare.com/hashfiles/unpacked_hashes.md5"
+        self.url = Config.virusshare_url
+        self.hash_url = Config.virusshare_hash_url
         self.request_mode = request_mode
         self.api_key = vs_api_key
 

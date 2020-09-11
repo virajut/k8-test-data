@@ -1,6 +1,7 @@
 try:
     from requests import get, post
     from os.path import abspath, basename
+    from src.config import Config
 except ImportError as err:
     print(f"Failed to import required modules: {err}")
 
@@ -13,7 +14,7 @@ class Virustotal(object):
     def __init__(self, API_KEY: str = None, PROXIES: dict = None):
         self.API_KEY = API_KEY
         self.PROXIES = PROXIES
-        self.BASEURL = "https://www.virustotal.com/vtapi/v2/"
+        self.BASEURL = Config.virustotal_url
         self.VERSION = "0.0.9"
         self.headers = {
             "Accept-Encoding": "gzip, deflate",
