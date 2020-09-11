@@ -39,9 +39,7 @@ class TekDefenceScraper(Scraper):
 
         # get download file link
         file_download_link_elements = response.xpath("//h3[@class='title']/a/@href")
-        print(file_download_link_elements)
         loader = ItemLoader(item=MaliciousFileCrawlerItem())
-
         for link_element in file_download_link_elements:
             link = link_element.get()
             absolute_path = urljoin(response.url, link)
