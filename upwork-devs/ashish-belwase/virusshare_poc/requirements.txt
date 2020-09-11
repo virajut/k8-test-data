@@ -1,3 +1,6 @@
+boto3==1.14.57
+bs4==0.0.1
 Flask==1.1.2
+lxml==4.1.1
 pandas==0.22.0
 requests==2.23.0

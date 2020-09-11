@@ -13,10 +13,10 @@
 
 | Endpoint | Description             | Payload     |
 | -------- | ------------------------| ----------- |
+| `/fetch-files` | Scrape all files from site to minio  |  `{"site": "glasswall"}` |
+| `/files` | Get malicious files   | `{"file_type": "txt", "num_files":2}` |	
 | `/scrape-vs-file`  | Download a file from VS   | `{"api_key": "","hash"   : ""}` |
 | `/check-malicious` | Check if a file is malicious   | `{"file": "<binary file>"}` |
-| `/fetch-vs-files` | Get all VS malicious files from hash   |  |
-| `/files` | Get malicious files   | `{"file_type": "txt", "num_files":2}` |	
 
 ## Docker Image
 
@@ -40,4 +40,7 @@ To run the aforementioned built image run:
 
 To run through kubernetes
 
-`kubectl apply -f deploy.yaml`
+```
+kubectl apply -f minio_service.yaml
+kubectl apply -f deploy.yaml
+```

@@ -1,5 +1,7 @@
 import requests
 import os
+import uuid
+import urllib.request
 
 
 class BaseScraper:
@@ -20,3 +22,10 @@ class BaseScraper:
             return response
         except Exception:
             return False
+
+    @staticmethod
+    def get_file_from_url(url):
+        ext = url.split(".")[-1]
+        path = BaseScraper.download_path + "/" + str(uuid.uuid4()) + "." + ext
+        urllib.request.urlretrieve(url, path)
+        return path

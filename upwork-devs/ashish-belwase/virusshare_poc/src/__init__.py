@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify, send_file
 
 from src.file_processor import FileProcessor
-from src.scrapers import VSScraper
+from src.scrapers import VSScraper, GlasswallScraper
 
 
 def validation_error(msg):
@@ -41,11 +41,21 @@ def create_app():
         file_info = FileProcessor.process(file)
         return jsonify(file_info)
 
-    @app.route("/fetch-vs-files", methods=["POST"])
-    def fetch_vs_files():
-        vs = VSScraper(os.environ.get("vs_api_key", ""))
-        hashes = vs.get_demo_hashes()
-        output = FileProcessor.process_vs_hash(hashes)
+    @app.route("/fetch-files", methods=["POST"])
+    def fetch_files():
+        output = {}
+        data = request.json
+        if data["site"] == "glasswall":
+            GlasswallScraper.download_pdf()
+
+        elif data["site"] == "virusshare":
+            vs_api_key = os.environ.get("vs_api_key", None)
+            if vs_api_key:
+                vs = VSScraper(vs_api_key)
+                hashes = vs.get_demo_hashes()
+                FileProcessor.process_vs_hash(hashes)
+            else:
+                output["message"] = "vs_api_key not supplied"
         return jsonify(output)
 
     @app.route("/files", methods=["POST"])

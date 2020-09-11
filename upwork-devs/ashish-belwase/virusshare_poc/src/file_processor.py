@@ -5,9 +5,19 @@ import uuid
 from src.file_service import FileService
 from src.glasswall_service import GlasswallService
 from src.scrapers import VSScraper
+from src.minio_service import Minio
 
 
 class FileProcessor:
+    @staticmethod
+    def zip_file(f):
+        fname = VSScraper.download_path + "/" + str(uuid.uuid4()) + ".zip"
+        zipObj = zipfile.ZipFile(fname, "w")
+        arcname = f.rsplit("/", 1)[-1]
+        zipObj.write(f, arcname=arcname)
+        zipObj.close()
+        return fname
+
     @staticmethod
     def zip_files(files):
         fname = VSScraper.download_path + "/" + str(uuid.uuid4()) + ".zip"
@@ -35,7 +45,7 @@ class FileProcessor:
 
     @staticmethod
     def process(file):
-        f = FileService.save_file(file)
+        f = FileService.save_to_minio(file)
         file_info = GlasswallService.check_malicious(f)
         return file_info
 
@@ -45,12 +55,14 @@ class FileProcessor:
         for h in hashes:
             vs = VSScraper(os.environ["vs_api_key"])
             f = vs.scrape_file(h.strip())
-            if zipfile.is_zipfile(f):
-                FileProcessor.unzip_files(f)
-            else:
-                FileService.save_file(file)
+            if not zipfile.is_zipfile(f):
+                f = FileProcessor.zip_file(f)
+
+            FileService.save_to_minio(f)
             break
 
+        # skipping this for now
+        return infos
         files_to_check = FileProcessor.get_local_files()
         for f in files_to_check:
             file_info = GlasswallService.check_malicious(f)
@@ -64,15 +76,13 @@ class FileProcessor:
 
     @staticmethod
     def get_files(file_type, num_files):
-        # To Do :  to be replaced by minio file fetch service
-        files = FileProcessor.get_local_files()
-        filtered_files = [f for f in files if file_type in f.rsplit(".", 1)[1]]
-        filtered_files = (
-            filtered_files
-            if num_files > len(filtered_files)
-            else filtered_files[0:num_files]
-        )
+        "Downloads given number of files from a minio bucket of specific file types"
+        url = os.getenv("MINIO_URL")
+        access_key = os.getenv("MINIO_ACCESS_KEY")
+        secret_key = os.getenv("MINIO_SECRET_KEY")
+        minio = Minio(url, access_key, secret_key)
+        files = minio.download_files(file_type, num_files)
         zipped_file = None
-        if filtered_files:
-            zipped_file = FileProcessor.zip_files(filtered_files)
+        if files:
+            zipped_file = FileProcessor.zip_files(files)
         return zipped_file
