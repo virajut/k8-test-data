@@ -33,10 +33,5 @@ class TestDasMalwerkScraper:
         pass
 
 
-class TestTekDefenceScraper:
-
-    def test_start_requests(self):
-        pass
-
 
 

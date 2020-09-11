@@ -26,7 +26,7 @@ class DasMalwerkScraper(Scraper):
 
     def start_requests(self):
         """ inbuilt start method called by scrapy when initializing crawler. """
-        yield scrapy.Request(self.file_urls,callback=self.navigate_to)
+        yield scrapy.Request(self.file_urls,callback=self.download_files)
 
     def navigate_to(self, response):
         yield scrapy.Request(self.file_urls,
