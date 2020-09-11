@@ -14,6 +14,6 @@ jobs:
       - name: Installing the pre-requiste
         run: sudo apt-get install python3-setuptools && pip3 install wheel
       - name: Iniatilize the tool
-        run: pip3 install safety
+        run: pip3 install --user safety
       - name: Perform Scan
         run: safety -h
