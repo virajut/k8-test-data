@@ -26,7 +26,7 @@ class DasMalwerkScraper(Scraper):
 
     def start_requests(self):
         """ inbuilt start method called by scrapy when initializing crawler. """
-        yield scrapy.Request(self.file_urls,callback=self.download_files)
+        yield scrapy.Request(self.file_urls,callback=self.navigate_to)
 
     def navigate_to(self, response):
         yield scrapy.Request(self.file_urls,
@@ -36,6 +36,7 @@ class DasMalwerkScraper(Scraper):
         # get download file link
         html= html_xml.fromstring(response.text)
         file_download_link_elements = html.xpath("//tr//td[2]/a/@href")
+
         loader = ItemLoader(item=MaliciousFileCrawlerItem())
 
         for link in file_download_link_elements:
