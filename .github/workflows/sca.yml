@@ -16,4 +16,4 @@ jobs:
       - name: Iniatilize the tool
         run: pip3 install safety
       - name: Perform Scan
-        run: find . -name requirements.txt | xargs -I % sh -c 'safety check -r %'
+        run: safety -h
