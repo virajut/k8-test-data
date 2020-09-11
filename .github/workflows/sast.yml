@@ -16,4 +16,4 @@ jobs:
       - name: Iniatilize the tool
         run: pip3 install --user bandit
       - name: Perform Scan
-        run: python3 -m bandit -r .
+        run: python3 -m bandit --skip B605 -r .
