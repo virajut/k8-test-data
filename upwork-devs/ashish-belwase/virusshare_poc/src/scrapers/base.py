@@ -3,6 +3,8 @@ import os
 import uuid
 import urllib.request
 
+from src.constants import download_path
+
 
 class BaseScraper:
 
@@ -12,8 +14,6 @@ class BaseScraper:
         "Accept-Language": "en-US, en",
         "User-Agent": "Mozilla/5.0 (X11 Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36",
     }
-    download_path = os.environ.get("STATIC_PATH", "src/static")
-    unzip_path = download_path + "/zp"
 
     @staticmethod
     def get(url):
@@ -26,6 +26,6 @@ class BaseScraper:
     @staticmethod
     def get_file_from_url(url):
         ext = url.split(".")[-1]
-        path = BaseScraper.download_path + "/" + str(uuid.uuid4()) + "." + ext
+        path = download_path + "/" + str(uuid.uuid4()) + "." + ext
         urllib.request.urlretrieve(url, path)
         return path

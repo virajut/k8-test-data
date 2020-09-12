@@ -1,11 +1,17 @@
 import csv
+import logging
+
+from src.file_service import FileService
+from src.config import Config
 from .base import BaseScraper
+
+logger = logging.getLogger("GW:gw_scraper")
 
 
 class VSScraper(BaseScraper):
     def __init__(self, vs_api_key="", request_mode="download"):
-        self.url = "https://virusshare.com/apiv2/{}?apikey={}&hash={}"
-        self.hash_url = "https://virusshare.com/hashfiles/unpacked_hashes.md5"
+        self.url = Config.virusshare_url
+        self.hash_url = Config.virusshare_hash_url
         self.request_mode = request_mode
         self.api_key = vs_api_key
 
@@ -47,3 +53,16 @@ class VSScraper(BaseScraper):
             "000be57dc7d0013ae5c1cd9cc53c58a8",
             "0015760015829eded58ccc8727fe466f",
         ]
+
+    def process_hashes(self, hashes):
+        for h in hashes:
+            try:
+                f = self.scrape_file(h.strip())
+                FileService.save_to_minio(f)
+            except Exception:
+                continue
+
+    def scrape(self):
+        logger.info("scraping {}".format(self.url))
+        hashes = self.get_demo_hashes()
+        self.process_hashes(hashes)

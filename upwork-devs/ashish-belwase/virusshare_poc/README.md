@@ -15,8 +15,6 @@
 | -------- | ------------------------| ----------- |
 | `/fetch-files` | Scrape all files from site to minio  |  `{"site": "glasswall"}` |
 | `/files` | Get malicious files   | `{"file_type": "txt", "num_files":2}` |	
-| `/scrape-vs-file`  | Download a file from VS   | `{"api_key": "","hash"   : ""}` |
-| `/check-malicious` | Check if a file is malicious   | `{"file": "<binary file>"}` |
 
 ## Docker Image
 
