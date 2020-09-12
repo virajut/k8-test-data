@@ -36,6 +36,7 @@ class DasMalwerkScraper(Scraper):
         # get download file link
         html= html_xml.fromstring(response.text)
         file_download_link_elements = html.xpath("//tr//td[2]/a/@href")
+
         loader = ItemLoader(item=MaliciousFileCrawlerItem())
 
         for link in file_download_link_elements:

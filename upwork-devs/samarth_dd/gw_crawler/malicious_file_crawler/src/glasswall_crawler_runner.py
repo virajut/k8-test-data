@@ -9,7 +9,11 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from malicious_file_crawler.src.utils.read_config import ConfigReader
 
-logger = logging.getLogger("gw:k8-testdata")
+logging.basicConfig(filename="testdata.log",
+                    format='%(asctime)s %(message)s',
+                    filemode='w')
+
+logger=logging.getLogger()
 
 class GlassWallRunner(object):
     """ Initialize crawler with project settings """
@@ -24,7 +28,6 @@ class GlassWallRunner(object):
     """ Get all the sites to crawl from config file """
 
     def get_sites_to_run(self, scrape_site=None):
-
         if scrape_site is None:
             section = "SCRAPE_SITE"
             try:
@@ -34,6 +37,7 @@ class GlassWallRunner(object):
                 raise CloseSpider(reason="Error while getting site list from config.")
 
         else:
+            logger.debug("in main")
             sites_arr = scrape_site.split(",")
         site_cfg = {}
 
@@ -71,5 +75,5 @@ if __name__ == '__main__':
     else:
         site_list = scraper.get_sites_to_run()
 
-    logger.info("in main")
+    logger.debug("in main")
     scraper.main(site_list)
