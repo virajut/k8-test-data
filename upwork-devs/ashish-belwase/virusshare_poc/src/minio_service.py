@@ -49,7 +49,7 @@ class Minio:
         except Exception as e:
             logger.error(e)
 
-    def upload_to_minio(self, file_path, bucket_name, filename):
+    def upload(self, file_path, bucket_name, filename):
 
         try:
             logger.info("Checking if the Bucket to upload files exists or not.")

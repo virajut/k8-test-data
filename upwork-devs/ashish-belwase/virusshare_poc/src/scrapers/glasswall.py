@@ -18,6 +18,9 @@ class GlasswallScraper(BaseScraper):
 
     @staticmethod
     def download_pdf():
+        """
+        Download pdf files from glasswall site
+        """
         response = BaseScraper.get(GlasswallScraper.url + "/technology")
         if response:
             soup = BeautifulSoup(response.content, "lxml")
@@ -25,13 +28,16 @@ class GlasswallScraper(BaseScraper):
             logger.info("downloading {} pdfs".format(len(pdfs)))
             for pdf in pdfs:
                 url = pdf.get("href")
-                f = BaseScraper.get_file_from_url(url)
-                FileService.save_to_minio(f)
+                try:
+                    f = BaseScraper.get_file_from_url(url)
+                    FileService.store_files(f)
+                except Exception as ex:
+                    logger.info("Error saving file {}".format(str(ex)))
 
     @staticmethod
     def scrape():
         """
-        fetch all files from glasswall
+        Fetch all files from glasswall
         """
         logger.info("scraping {}".format(GlasswallScraper.url))
         GlasswallScraper.download_pdf()

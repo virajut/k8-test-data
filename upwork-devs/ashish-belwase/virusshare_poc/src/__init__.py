@@ -5,6 +5,7 @@ from src.file_service import FileService
 from src.scrapers import VSScraper, GlasswallScraper
 from src.config import Config
 
+
 def validation_error(msg):
     return jsonify({"error": msg}), 400
 

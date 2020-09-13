@@ -17,6 +17,9 @@ class BaseScraper:
 
     @staticmethod
     def get(url):
+        """
+        Fetch url
+        """
         try:
             response = requests.get(url, headers=BaseScraper.headers)
             return response
@@ -25,6 +28,9 @@ class BaseScraper:
 
     @staticmethod
     def get_file_from_url(url):
+        """
+        Fetch url as file
+        """
         ext = url.split(".")[-1]
         path = download_path + "/" + str(uuid.uuid4()) + "." + ext
         urllib.request.urlretrieve(url, path)

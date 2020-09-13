@@ -16,6 +16,9 @@ class VSScraper(BaseScraper):
         self.api_key = vs_api_key
 
     def scrape_file(self, hash):
+        """
+        Get VS file from hash and store to local path
+        """
         url = self.url.format(self.request_mode, self.api_key, hash)
         response = VSScraper.get(url)
         file_name = (
@@ -27,6 +30,9 @@ class VSScraper(BaseScraper):
         return file_name
 
     def scrape_hashes(self):
+        """
+        Retrieve all hashes from  VS and save to csv file
+        """
         response = VSScraper.get(self.hash_url)
         hashes = []
         response = response.content.split("\n")
@@ -41,6 +47,9 @@ class VSScraper(BaseScraper):
                 writer.writerow([each])
 
     def get_demo_hashes(self):
+        """
+        For demo return static hashes
+        """
         return [
             "0002d20a7423518b7f371302014076c9",
             "00034b48dddb5b717481935c292ad2ef",
@@ -55,14 +64,20 @@ class VSScraper(BaseScraper):
         ]
 
     def process_hashes(self, hashes):
-        for h in hashes:
+        """
+        Get file from each hashes and save to storage
+        """
+        for _hash in hashes:
             try:
-                f = self.scrape_file(h.strip())
-                FileService.save_to_minio(f)
+                f = self.scrape_file(_hash.strip())
+                FileService.store_files(f)
             except Exception:
                 continue
 
     def scrape(self):
+        """
+        Get all hashes and save to storage
+        """
         logger.info("scraping {}".format(self.url))
         hashes = self.get_demo_hashes()
         self.process_hashes(hashes)
