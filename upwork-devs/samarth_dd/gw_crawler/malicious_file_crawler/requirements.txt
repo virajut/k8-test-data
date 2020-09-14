@@ -34,3 +34,4 @@ w3lib==1.22.0
 wget==3.2
 zope.interface==5.1.0
 python-dotenv == 0.13.0
+
