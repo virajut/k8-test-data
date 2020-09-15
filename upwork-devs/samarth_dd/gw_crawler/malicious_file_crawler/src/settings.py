@@ -89,10 +89,7 @@ AWS_ENDPOINT_URL = os.environ['ENDPOINT']
 FILES_STORE = os.environ['FILES_STORE']
 FILE_STORE_S3_ACL = 'public-read'
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-
 AWS_SECRET_ACCESS_KEY= os.environ['AWS_SECRET_ACCESS_KEY']
-# Uncomment this when MINIO service is running
-
 # Uncomment this when MINIO service is running
 # max download size of 5gb
 DOWNLOAD_MAXSIZE = 5368709120
