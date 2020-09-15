@@ -3,14 +3,14 @@
 ###Create virtual env 
 
 ```
-    virtualenv venv
+        virtualenv venv
     
 ```
 
 ### Install requirements
 ```
-    cd malicious_file_crawler/
-    pip install -r requirements.txt
+        cd malicious_file_crawler/
+        pip install -r requirements.txt
 ```
 
 ### Run scrapper
