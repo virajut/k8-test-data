@@ -1,6 +1,6 @@
 from minio import Minio, ResponseError
 
-from storage.src.storage_adapter import BaseStorageAdapter
+from storage.src.base_adapter import BaseStorageAdapter
 
 
 class MinioAdapter(BaseStorageAdapter):
@@ -42,7 +42,8 @@ class MinioAdapter(BaseStorageAdapter):
         return bucket_list
 
     def get_all_files(self,container_name):
-        pass
+        list=self._client.list_objects(container_name)
+        return list
 
     def upload_file(self, container_name, file_name, file_path):
         if (not self._client.bucket_exists(container_name)):
@@ -94,4 +95,3 @@ class MinioAdapter(BaseStorageAdapter):
 
     def set_policy(self, container_name, policy):
         self._client.set_bucket_policy(container_name,policy)
-

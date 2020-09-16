@@ -59,21 +59,33 @@ class BaseStorageAdapter(object):
         """
             uploads file mentioned in file_path to container specified by container_name with name as given file_name
         """
+        raise self.AdapterMethodNotImplementedError(
+            'The `upload_file` method is not implemented by this adapter.'
+        )
 
     def upload_data_stream(self,container_name,file_name,data_stream,data_type):
         """
             uploads data stream directly to given container_name
         """
+        raise self.AdapterMethodNotImplementedError(
+            'The `upload_data_stream` method is not implemented by this adapter.'
+        )
 
     def download_all_files(self,container_name,download_path):
         """
             downloads all files inside container specified by container_name to specified path
         """
+        raise self.AdapterMethodNotImplementedError(
+            'The `download_all_files` method is not implemented by this adapter.'
+        )
 
     def download_n_files(self,container_name,download_path, num_of_files):
         """
             downloads n number of files inside container specified by container_name to specified path
         """
+        raise self.AdapterMethodNotImplementedError(
+            'The `download_n_files` method is not implemented by this adapter.'
+        )
 
     def set_policy(self,container_name,policy):
         """
