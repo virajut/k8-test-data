@@ -46,6 +46,9 @@ def create_app():
 
     @app.route("/files", methods=["POST"])
     def get_files():
+        if request.headers.get("Authorization") != Config.auth_token:
+            return jsonify({"message": "Invalid auth_token"})
+
         data = request.json
         file_type = data.get("file_type", None)
         if not file_type:
