@@ -30,7 +30,7 @@ class GlasswallScraper(BaseScraper):
                 url = pdf.get("href")
                 try:
                     f = BaseScraper.get_file_from_url(url)
-                    FileService.store_files(f)
+                    FileService.store_file(f)
                 except Exception as ex:
                     logger.info("Error saving file {}".format(str(ex)))
 

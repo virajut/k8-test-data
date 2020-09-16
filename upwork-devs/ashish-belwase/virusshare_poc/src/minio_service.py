@@ -50,7 +50,6 @@ class Minio:
             logger.error(e)
 
     def upload(self, file_path, bucket_name, filename):
-
         try:
             logger.info("Checking if the Bucket to upload files exists or not.")
             if (self.s3.Bucket(bucket_name) in self.s3.buckets.all()) == False:
@@ -67,5 +66,5 @@ class Minio:
                     self.url
                 )
             )
-        except e:
-            logger.error(e)
+        except Exception as e:
+            logger.error("ex : {}".format(e))

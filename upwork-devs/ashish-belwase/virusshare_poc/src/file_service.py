@@ -24,10 +24,13 @@ class FileService:
             return meta
 
     @staticmethod
-    def zip_files(files):
+    def zip_files(files, key=None):
         """
         Compress :files to zip
         """
+        path = download_path
+        if key:
+            path = path + "/" + key
         fname = download_path + "/" + str(uuid.uuid4()) + ".zip"
         zipObj = zipfile.ZipFile(fname, "w")
         for file in files:
@@ -37,21 +40,27 @@ class FileService:
         return fname
 
     @staticmethod
-    def unzip_files(file):
+    def unzip_files(file, key=None):
         """
         Unzip :file to local path
         """
         with zipfile.ZipFile(file, "r") as zp:
-            zp.extractall(download_path, pwd=bytes(os.environ["vs_zip_pwd"], "utf-8"))
+            path = download_path
+            if key:
+                path = download_path + "/" + key
+            zp.extractall(path, pwd=bytes(os.environ["vs_zip_pwd"], "utf-8"))
 
     @staticmethod
-    def get_local_files():
+    def get_local_files(key=None):
         """
         Return all files from local storage folder
         """
         files = []
-        for file in os.listdir(download_path):
-            files.append(download_path + "/" + file)
+        path = download_path
+        if key:
+            path = path + "/" + key
+        for file in os.listdir(path):
+            files.append(path + "/" + file)
         return files
 
     @staticmethod
@@ -78,7 +87,7 @@ class FileService:
         return storage
 
     @staticmethod
-    def store_files(file_path):
+    def store_file(file_path):
         """
         Put file to Minio
         """
@@ -90,6 +99,16 @@ class FileService:
         return storage.upload(file_path, file_meta["extension"], file_meta["name"])
 
     @staticmethod
+    def store_vs_files(files, ext):
+        """
+        Put VS files to Minio
+        """
+        storage = FileService.get_storage()
+        for f in files:
+            filename = f.rsplit("/", 1)[-1]
+            storage.upload(f, ext, filename)
+
+    @staticmethod
     def get_files(file_type, num_files):
         """
         Downloads given number of files from a minio bucket of give file_type
@@ -98,3 +117,24 @@ class FileService:
         files = minio.download_files(file_type, num_files)
         zipped_file = FileService.zip_files(files) if files else None
         return zipped_file
+
+    @staticmethod
+    def process_zip(file):
+        """
+        Takes zip file, unzip it , extract meta and send to storage
+        """
+        from src.scrapers import VSScraper
+
+        FileService.unzip_files(file, file.filename)
+        parent_path = download_path + "/" + file.filename
+        for zipfilename in os.listdir(parent_path):
+            # To do : run these on each K8-pod
+
+            ext = VSScraper.get_zip_extension(zipfilename)
+            if not ext:
+                # skip file without extension
+                continue
+
+            FileService.unzip_files(parent_path + "/" + zipfilename, zipfilename)
+            files = FileService.get_local_files(zipfilename)
+            FileService.store_vs_files(files, ext)

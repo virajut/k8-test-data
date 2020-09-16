@@ -19,6 +19,15 @@ def create_app():
     def health():
         return jsonify({"message": "ok"})
 
+    @app.route("/process-zip", methods=["POST"])
+    def process_zip():
+        output = {}
+        file = request.files.get("file", None)
+        if not file:
+            return jsonify({"message": "no file supplied"})
+        FileService.process_zip(file)
+        return jsonify(output)
+
     @app.route("/fetch-files", methods=["POST"])
     def fetch_files():
         output = {}

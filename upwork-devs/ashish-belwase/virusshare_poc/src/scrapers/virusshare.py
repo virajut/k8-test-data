@@ -46,6 +46,15 @@ class VSScraper(BaseScraper):
             for each in hashes:
                 writer.writerow([each])
 
+    @staticmethod
+    def get_zip_extension(filename):
+        ext = None
+        try:
+            ext = filename.split("_")[1]
+        except:
+            pass
+        return ext
+
     def get_demo_hashes(self):
         """
         For demo return static hashes
@@ -70,7 +79,7 @@ class VSScraper(BaseScraper):
         for _hash in hashes:
             try:
                 f = self.scrape_file(_hash.strip())
-                FileService.store_files(f)
+                FileService.store_file(f)
             except Exception:
                 continue
 
