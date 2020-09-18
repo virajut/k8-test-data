@@ -51,3 +51,16 @@ Malware Public Repositories ( Proceed with caution when handling live malware) :
   - ZIP password is “infected”
 
 Public malware reference - https://cyberlab.pacific.edu/resources/malware-samples-for-students
+
+### Build
+
+* Set .env file in each service [ file_distribution and gw_crawler ]
+
+`docker build -t glasswallcrawler:1.0 gw_crawler`
+`docker build -t k8-file-distribution file_distribution`
+
+
+### Run
+
+`docker-compose up`
+

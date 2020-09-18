@@ -1,17 +1,5 @@
 version: '3.6'
 services:
-  # k8-test-data:
-  #   image: k8-test-data
-  #   build:
-  #     context: .
-  #     dockerfile: app/Dockerfile
-  #   env_file:
-  #     - app/.env
-  #   ports:
-  #     - 5000:5000
-  #   links:
-  #     - minio
-
   glasswall-crawler:
     image: glasswallcrawler:1.0
     build:
