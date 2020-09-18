@@ -32,3 +32,8 @@ To run the aforementioned built image run:
 
 `docker run -e PYTHONUNBUFFERED=0 -p 5001:5000 -it --rm k8-file-distribution`
 
+
+### Rpc
+* See `grpc_client.py` for sample use case
+* Note : generate grpc files :
+`python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. file.proto`

@@ -1,2 +1,4 @@
 boto3==1.14.57
+grpcio
+grpcio-tools
 Flask==1.1.2

@@ -20,6 +20,7 @@ services:
     env_file:
       - file_distribution/.env
     ports:
+      - 50051:50051
       - 5001:5001
     links:
       - minio

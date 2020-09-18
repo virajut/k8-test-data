@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message Input {
+    
+	string type = 1;
+	int32 num_files = 2;
+
+}
+
+message Response {
+    bytes data = 2;
+}
+
+service File {
+    rpc MaliciousFile(Input) returns (Response) {}
+}
