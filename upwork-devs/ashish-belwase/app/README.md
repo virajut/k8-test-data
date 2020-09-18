@@ -14,7 +14,6 @@
 | Endpoint | Description             | Payload     |
 | -------- | ------------------------| ----------- |
 | `/fetch-files` | Scrape all files from site to minio  |  `{"site": "glasswall"}` |
-| `/files` | Get malicious files   | `{"file_type": "txt", "num_files":2}` |	
 
 ## Docker Image
 

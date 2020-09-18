@@ -10,8 +10,5 @@ def get_envar(k, required=True):
 
 class Config(object):
     DEBUG = True
-    glasswall_url = get_envar("glasswall_url")
-    virusshare_url = get_envar("virusshare_url")
-    virusshare_hash_url = get_envar("virusshare_hash_url")
-    virustotal_url = get_envar("virustotal_url")
     auth_token = get_envar("auth_token", False)
+    download_path = "/usr/src/app"

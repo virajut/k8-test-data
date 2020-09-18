@@ -109,16 +109,6 @@ class FileService:
             storage.upload(f, ext, filename)
 
     @staticmethod
-    def get_files(file_type, num_files):
-        """
-        Downloads given number of files from a minio bucket of give file_type
-        """
-        minio = FileService.get_storage()
-        files = minio.download_files(file_type, num_files)
-        zipped_file = FileService.zip_files(files) if files else None
-        return zipped_file
-
-    @staticmethod
     def process_zip(file):
         """
         Takes zip file, unzip it , extract meta and send to storage
