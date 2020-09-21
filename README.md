@@ -16,7 +16,7 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
 - The final objective is to be able to to support - 4 Million files with an average file size of 10 Mbs. However at start we will start with Github repo. 
 
 **Process Flow:**
-  - Three to four type of kubernetes (K8) Pod will be complete the process flow. 
+  For each type of work, kubernetes (K8)  PODs of that type will be created. The orchestration of "POD type" clusters through Event driven architecture will complete  will be complete the process flow. 
   - K8 Pod type 1
      - The original zip file will be downloaded by scrapper along with metadata.
      - Persist the scrap log in cloud.
@@ -25,8 +25,8 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
   - K8 Pod type 2
      - On arrival in MQ, download the original zip file from Minio. Unzip it.
      - Create a folder, with name as GUID or hash.
-     - Do malicious check from virustotal.
-     - Send the file to Glasswall Icap rebuild service.
+     - Do malicious check from virustotal. (will be handled through K8 POD type 2.1 )
+     - Send the file to Glasswall Icap rebuild service. (will be handled through K8 POD type 2.2 )
      - Download the virustotal report.
      - Download GW icap xml report and rebuild file
      - Make a zip of the folder with same name as folder name.
