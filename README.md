@@ -14,9 +14,27 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
   - Glasswall private files (https://github.com/filetrust/malicious-test-files  , https://github.com/filetrust/sdk-eval-toolset/tree/master/test  and  https://console.aws.amazon.com/s3/buckets/jp-testbucket-1/?region=eu-west-2) 
 
 - The final objective is to be able to to support - 4 Million files with an average file size of 10 Mbs. However at start we will start with Github repo. 
-  - Scrapper to be designed to fetch files from Glasswall repositories and other public repositories. 
-  - A File Validator to validate the malacious content of the file. 
-  - A File Handler to persist the files to Github repository. 
+
+**Process Flow:**
+  - Three to four type of kubernetes (K8) Pod will be complete the process flow. 
+  - K8 Pod type 1
+     - The original zip file will be downloaded by scrapper along with metadata.
+     - Persist the scrap log in cloud.
+     - Base scrapper should have batch scrapping functionality.
+     - Put the Job in Rabbit MQ (Other option can be KubeMQ) with GUID as filename of the zip file.
+  - K8 Pod type 2
+     - On arrival in MQ, download the original zip file from Minio. Unzip it.
+     - Create a folder, with name as GUID or hash.
+     - Do malicious check from virustotal.
+     - Send the file to Glasswall Icap rebuild service.
+     - Download the virustotal report.
+     - Download GW icap xml report and rebuild file
+     - Make a zip of the folder with same name as folder name.
+     - Put the Job in Rabbit MQ with GUID as filename.
+  - Minio - S3 Synchronization.
+     - Non K-8 activities or create another K8 POD. This will long running as the queue will built up.
+  - K8 Pod type 3
+     - This Kubernetics POD will host distribution API, which will cater to all the client requests to provide the file from Minio service. 
   - Dynamic generation of files , based on programmatically modifications of content, structure and capabilities.
   
 Malware Public Repositories ( Proceed with caution when handling live malware) :
