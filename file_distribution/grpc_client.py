@@ -8,7 +8,7 @@ channel = grpc.insecure_channel("localhost:50051", options=options)
 
 stub = FileStub(channel)
 
-_input = Input(type="pdf", num_files=1)
+_input = Input(type="zip", num_files=2)
 
 response = stub.MaliciousFile(_input)
 with open("malicious.zip", "wb") as fp:
