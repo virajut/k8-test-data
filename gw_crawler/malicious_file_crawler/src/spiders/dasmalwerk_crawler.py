@@ -16,16 +16,16 @@ class DasMalwerkScraper(Scraper):
         'ROBOTSTXT_OBEY': False
     }
 
-    # def __init__(self, config=None, data=None):
-    #     super(DasMalwerkScraper, self).__init__()
-    #     self.cfg = config
-    #     self.file_urls = self.cfg.get('url')
-
-    def __init__(self, config=None, data=None, **kwargs):
+    def __init__(self, config=None, data=None):
         super(DasMalwerkScraper, self).__init__()
-        #self.cfg = config
-        self.cfg = ConfigReader(config.upper()).read_config()
+        self.cfg = config
         self.file_urls = self.cfg.get('url')
+
+    # def __init__(self, config=None, data=None, **kwargs):
+    #     super(DasMalwerkScraper, self).__init__()
+    #     #self.cfg = config
+    #     self.cfg = ConfigReader(config.upper()).read_config()
+    #     self.file_urls = self.cfg.get('url')
 
     def start_requests(self):
         """ inbuilt start method called by scrapy when initializing crawler. """
