@@ -1,7 +1,7 @@
 """ Utility class for reading config from config.ini file """
 
 import configparser
-from malicious_file_crawler.src import settings
+from src import settings
 
 
 # utility class to read properties from config.ini file

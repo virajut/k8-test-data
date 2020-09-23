@@ -14,7 +14,30 @@ BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 from dotenv import load_dotenv
 
+env_path=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 load_dotenv()
+
+PROJECT_NAME = 'malicious_file_crawler'
+# Define JOBDIR path for pausing and resuming crawls
+JOB_DIR = 'crawls/glasswallspider-1'
+
+# scrapyd endpoint
+SCRAPYD_ENDPOINT = 'http://localhost:6800'
+
+EXTENSIONS = {
+   'scrapy_dotpersistence.DotScrapyPersistence': 0,
+}
+
+DOTSCRAPY_ENABLED = True
+
+ADDONS_AWS_ACCESS_KEY_ID = 'AKIAJQHIR4M2CKU25U4Q'
+ADDONS_AWS_SECRET_ACCESS_KEY = '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'
+# ADDONS_AWS_USERNAME = "username"
+ADDONS_S3_BUCKET = 'smallday12345678'
+
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -37,6 +60,7 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 CONCURRENT_REQUESTS = 32
+REACTOR_THREADPOOL_MAXSIZE = 20
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -67,19 +91,24 @@ CONCURRENT_REQUESTS = 32
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
+    "src.pipelines.MaliciousFileCrawlerPipeline":1,
     'src.middlewares.MaliciousFileCrawlerDownloaderMiddleware': 543,
+
 }
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-# EXTENSIONS = {
-#    'scrapy.extensions.telnet.TelnetConsole': None,
-# }
+
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "src.pipelines.MaliciousFileCrawlerPipeline": 1
+
+
+    "src.pipelines.MySQLPipeline": 300,
+    "src.pipelines.UpdateStatsMiddleware":1
+
+
 }
 
 DOWNLOAD_TIMEOUT = 12000
@@ -110,3 +139,13 @@ DOWNLOAD_MAXSIZE = 5368709120
 # HTTPCACHE_DIR = 'httpcache'
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+DB_SETTINGS = {
+
+
+            'host':'localhost',
+            'user':'root',
+            'passwd':'12345678',
+            'db':'gw',
+}

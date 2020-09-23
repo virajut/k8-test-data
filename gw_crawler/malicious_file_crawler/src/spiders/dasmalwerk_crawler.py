@@ -2,10 +2,10 @@
 """ Scraper class for getting malicious files from tech defence portal """
 import scrapy
 from lxml import html as html_xml
-from malicious_file_crawler.src.items import MaliciousFileCrawlerItem
-from malicious_file_crawler.src.spiders.scraper import Scraper
+from src.items import MaliciousFileCrawlerItem
+from src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
-
+from src.utils.read_config import ConfigReader
 
 class DasMalwerkScraper(Scraper):
     name = 'das_malwerk_scraper'
@@ -16,9 +16,15 @@ class DasMalwerkScraper(Scraper):
         'ROBOTSTXT_OBEY': False
     }
 
-    def __init__(self, config=None, data=None):
+    # def __init__(self, config=None, data=None):
+    #     super(DasMalwerkScraper, self).__init__()
+    #     self.cfg = config
+    #     self.file_urls = self.cfg.get('url')
+
+    def __init__(self, config=None, data=None, **kwargs):
         super(DasMalwerkScraper, self).__init__()
-        self.cfg = config
+        #self.cfg = config
+        self.cfg = ConfigReader(config.upper()).read_config()
         self.file_urls = self.cfg.get('url')
 
     def start_requests(self):

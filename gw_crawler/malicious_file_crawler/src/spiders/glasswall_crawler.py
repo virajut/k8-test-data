@@ -2,9 +2,10 @@
 import logging
 
 import scrapy
-from malicious_file_crawler.src.items import MaliciousFileCrawlerItem
-from malicious_file_crawler.src.spiders.scraper import Scraper
+from src.items import MaliciousFileCrawlerItem
+from src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
+from src.utils.read_config import ConfigReader
 
 logger = logging.getLogger("gw:k8-testdata")
 prefs = {'profile.default_content_setting_values.automatic_downloads': 1}
@@ -21,9 +22,11 @@ class GlasswallScraper(Scraper):
         'ROBOTSTXT_OBEY': False
     }
 
-    def __init__(self, config=None, data=None):
+
+    def __init__(self, config=None, data=None, **kwargs):
+
         super(GlasswallScraper, self).__init__()
-        self.cfg = config
+        self.cfg = ConfigReader(config.upper()).read_config()
         self.login_url = self.cfg.get('login_url')
         self.start_urls = [self.login_url]
         self.file_page_url = self.cfg.get("file_page_url")
