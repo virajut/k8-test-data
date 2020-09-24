@@ -2,9 +2,9 @@
 import logging
 
 import scrapy
+from scrapy.loader import ItemLoader
 from src.items import MaliciousFileCrawlerItem
 from src.spiders.scraper import Scraper
-from scrapy.loader import ItemLoader
 from src.utils.read_config import ConfigReader
 
 logger = logging.getLogger("gw:k8-testdata")
@@ -14,14 +14,15 @@ prefs = {'profile.default_content_setting_values.automatic_downloads': 1}
 # remoteWebDriverUrl = "http://192.168.99.100:4444/wd/hub"
 
 class GlasswallScraper(Scraper):
-    name = 'glasswall_spider'
+    name = 'glasswall'
 
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'ROBOTSTXT_OBEY': False
-    }
+        'ROBOTSTXT_OBEY': False,
+        'JOB_DIR': 'crawls/glasswall',
 
+    }
 
     def __init__(self, config=None, data=None, **kwargs):
 

@@ -14,7 +14,7 @@ class MockResponse(object):
         self.status = status_code
         self.headers = {
             key.lower(): value for key, value in (
-                response_headers or {}).items()
+                    response_headers or {}).items()
         }
         self.data = content
         if content is None:

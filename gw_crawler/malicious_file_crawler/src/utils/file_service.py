@@ -1,13 +1,10 @@
+import logging
 import os
-import uuid
+import pathlib
 import zipfile
 
 from src.constants import base_unzip_path
-
 from src.constants import zip_path
-import os
-import zipfile
-import collections
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,25 +12,29 @@ download_path = file_path = base_unzip_path
 
 bundle_zip_path = zip_path
 
+logger = logging.getLogger(__name__)
+
 
 class FileService:
     """
        File service class for do file operations like zipping unzipping.
     """
+
     @staticmethod
     def unzip_files(file, key=None):
         """
         Unzip :file to download_path
         """
         try:
+
             with zipfile.ZipFile(file, "r") as zp:
                 path = download_path
                 if key:
                     path = download_path + "/" + key
                 zp.extractall(path, pwd=bytes(os.environ["vs_zip_pwd"], "utf-8"))
         except Exception:
+            logger.error(f"FileService:unzip_files: error {key}")
             raise Exception(f"Error while unzipping file {key}")
-
 
     @staticmethod
     def zip_files(files, key=None):
@@ -48,6 +49,7 @@ class FileService:
                 zipObj.write(file, file.split("/")[-1])
             zipObj.close()
         except Exception:
+            logger.error("FileService:zip_files: error")
             return None
         else:
             return fname
@@ -61,8 +63,18 @@ class FileService:
         meta = {}
         try:
             meta["name"] = file_path.split("/")[-1]
-            meta["extension"] = file_path.split(".")[-1]
+
+            suffix = pathlib.Path(file_path).suffix
+
+            extension = suffix.split(".")[-1]
+            if not extension:
+                meta["extension"] = 'txt'
+            else:
+                meta["extension"] = extension
+
+
         except Exception:
+            logger.error("FileService:get_file_meta: error")
             return None
         else:
             return meta
@@ -85,5 +97,5 @@ class FileService:
                     file_paths.append(filepath)
                     # returning all file paths
         except Exception:
-            raise Exception("Folder doesnt exist or there is error related to path")
+            raise Exception("FileService:get_all_file_paths:Folder doesnt exist or there is error related to path")
         return file_paths

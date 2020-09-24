@@ -3,19 +3,19 @@
 from urllib.parse import urljoin
 
 import scrapy
-from malicious_file_crawler.src.items import MaliciousFileCrawlerItem
-from malicious_file_crawler.src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
+from src.items import MaliciousFileCrawlerItem
+from src.spiders.scraper import Scraper
 
 
 class TekDefenceScraper(Scraper):
-    name = 'tek_defence_spider'
+    name = 'tekdefence'
 
     # Allow duplicate url request (we will be crawling "page 1" twice)
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'ROBOTSTXT_OBEY': False
+        'ROBOTSTXT_OBEY': False,
     }
 
     def __init__(self, config=None, data=None):
@@ -37,7 +37,6 @@ class TekDefenceScraper(Scraper):
                              callback=self.download_files)
 
     def download_files(self, response):
-
         # get download file link
         file_download_link_elements = response.xpath("//h3[@class='title']/a/@href")
         loader = ItemLoader(item=MaliciousFileCrawlerItem())

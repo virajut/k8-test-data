@@ -1,16 +1,12 @@
 import os
 import sys
 from datetime import datetime
-from datetime import datetime
 from unittest import TestCase, mock
 
 import pytz
-
 from minio.api import _DEFAULT_USER_AGENT
 from minio.error import InvalidBucketError, NoSuchBucket
-
 from requests.cookies import MockResponse
-
 from twisted.conch.test.test_channel import MockConnection
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -19,11 +15,11 @@ from storage.src.minio_adapter import MinioAdapter
 from storage.test.responses.minio_mocks import MockConnection, MockResponse
 import pytest
 
+
 class TestMinioAdapter(TestCase):
 
     def setUp(self):
         self.adapter = MinioService.get_storage_adapter()
-
 
     def test_bucket_is_string(self):
         with pytest.raises(TypeError):
@@ -32,7 +28,6 @@ class TestMinioAdapter(TestCase):
     def test_bucket_is_not_empty_string(self):
         with pytest.raises(InvalidBucketError):
             self.adapter.create_bucket('  \t \n  ')
-
 
     def test_bucket_exists_invalid_name(self):
         with pytest.raises(InvalidBucketError):
@@ -126,10 +121,10 @@ class TestMinioAdapter(TestCase):
         self.assertEquals(2, count)
         self.assertEquals('hello', buckets_list[0].name)
         self.assertEquals(datetime(2015, 6, 22, 23, 7, 43, 240000,
-                     pytz.utc), buckets_list[0].creation_date)
+                                   pytz.utc), buckets_list[0].creation_date)
         self.assertEquals('world', buckets_list[1].name)
         self.assertEquals(datetime(2015, 6, 22, 23, 7, 56, 766000,
-                     pytz.utc), buckets_list[1].creation_date)
+                                   pytz.utc), buckets_list[1].creation_date)
 
     def test_bucket_is_string(self):
         with pytest.raises(TypeError):
@@ -198,4 +193,3 @@ class TestMinioAdapter(TestCase):
         config = {'HOSTNAME': 'localhost:9000', "AWS_ACCESS_KEY_ID": None, 'AWS_SECRET_ACCESS_KEY': None}
         service = MinioAdapter(config)
         service.remove_bucket('hello')
-

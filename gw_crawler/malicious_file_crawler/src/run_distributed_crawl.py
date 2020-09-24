@@ -3,18 +3,17 @@
 import os
 import sys
 
-from scrapyd_api import ScrapydAPI
 from scrapy.exceptions import CloseSpider
 from scrapy.utils.project import get_project_settings
+from scrapyd_api import ScrapydAPI
 from src.utils.read_config import ConfigReader
-
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 class DistributedCrawlRunner(object):
-
     """ Initialize crawler with project settings """
+
     def __init__(self, *spidercfg):
         self.settings = get_project_settings()  # Scrapy settings
         self.spidercfg = spidercfg
@@ -27,6 +26,7 @@ class DistributedCrawlRunner(object):
                                                          self.extra_settings))
 
     """ Get all the sites to crawl from config file """
+
     def get_sites_and_config(self, scrape_site=None):
 
         if scrape_site is None:
@@ -77,4 +77,3 @@ if __name__ == '__main__':
         site_list = scraper.get_sites_and_config()
 
     scraper.schedule_job(site_list)
-

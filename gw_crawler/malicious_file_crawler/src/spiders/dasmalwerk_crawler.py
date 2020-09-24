@@ -2,30 +2,24 @@
 """ Scraper class for getting malicious files from tech defence portal """
 import scrapy
 from lxml import html as html_xml
+from scrapy.loader import ItemLoader
 from src.items import MaliciousFileCrawlerItem
 from src.spiders.scraper import Scraper
-from scrapy.loader import ItemLoader
-from src.utils.read_config import ConfigReader
+
 
 class DasMalwerkScraper(Scraper):
-    name = 'das_malwerk_scraper'
+    name = 'dasmalwerk'
     # Allow duplicate url request (we will be crawling "page 1" twice)
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'ROBOTSTXT_OBEY': False
+        'ROBOTSTXT_OBEY': False,
     }
 
     def __init__(self, config=None, data=None):
         super(DasMalwerkScraper, self).__init__()
         self.cfg = config
         self.file_urls = self.cfg.get('url')
-
-    # def __init__(self, config=None, data=None, **kwargs):
-    #     super(DasMalwerkScraper, self).__init__()
-    #     #self.cfg = config
-    #     self.cfg = ConfigReader(config.upper()).read_config()
-    #     self.file_urls = self.cfg.get('url')
 
     def start_requests(self):
         """ inbuilt start method called by scrapy when initializing crawler. """
@@ -43,5 +37,6 @@ class DasMalwerkScraper(Scraper):
         loader = ItemLoader(item=MaliciousFileCrawlerItem())
 
         for link in file_download_link_elements:
+            # self.state['items_count'] = self.state.get('items_count', 0) + 1
             loader.add_value('file_urls', link)
             yield loader.load_item()

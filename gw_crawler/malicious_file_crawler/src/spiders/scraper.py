@@ -11,12 +11,8 @@ from twisted.internet.error import TimeoutError
 
 class Scraper(scrapy.Spider):
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-
     def __init__(self, *args, **kwargs):
-        super(Scraper,self).__init__(*args, **kwargs)
-
+        super(Scraper, self).__init__(*args, **kwargs)
 
     """ scrapy starts crawling by calling this method """
 

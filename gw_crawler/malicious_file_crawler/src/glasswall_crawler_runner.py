@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from scrapy.exceptions import CloseSpider
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
-from malicious_file_crawler.src.utils.read_config import ConfigReader
+from src.utils.read_config import ConfigReader
 
 logging.basicConfig(filename="testdata.log",
                     format='%(asctime)s %(message)s',
@@ -23,7 +23,9 @@ class GlassWallRunner(object):
         settings_file_path = "malicious_file_crawler.src.settings"
         os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
         settings = get_project_settings()  # Scrapy settings
-        self.process = CrawlerProcess(settings)
+        # settings['JOBDIR'] = settings.get('JOB_DIR')
+        # self.extra_settings = {'JOBDIR': settings.get('JOB_DIR')}
+        self.process = CrawlerProcess(settings=settings)
         self.spidercfg = spidercfg
 
     """ Get all the sites to crawl from config file """
@@ -31,14 +33,16 @@ class GlassWallRunner(object):
     def get_sites_to_run(self, scrape_site=None):
         if scrape_site is None:
             section = "SCRAPE_SITE"
+            section = os.environ['SCRAPE_SITES']
             try:
-                config_obj = ConfigReader(section).read_config()
-                sites_arr = config_obj['scrape_sites'].split(',')
+                # config_obj = ConfigReader(section).read_config()
+                sites_arr = section.split(',')
+                print(sites_arr)
             except KeyError as ke:
+                logger.error(ke)
                 raise CloseSpider(reason="Error while getting site list from config.")
 
         else:
-            logger.debug("in main")
             sites_arr = scrape_site.split(",")
         site_cfg = {}
 
@@ -48,6 +52,7 @@ class GlassWallRunner(object):
                 cfg = ConfigReader(site.upper()).read_config()
                 site_cfg[site] = cfg
             except KeyError as ke:
+                logger.error(ke)
                 raise CloseSpider
         return site_cfg
 
@@ -56,12 +61,12 @@ class GlassWallRunner(object):
     def run_spiders(self, cfg, data=None):
         spider = cfg.get('name')
         self.process.crawl(spider, config=cfg, data=data)
-        self.process.start()  # the script will block here until crawling is finished
 
     def main(self, site_arr):
         for site, cfg in site_arr.items():
             """ run crawler for every site and get response list """
             self.run_spiders(cfg)
+        self.process.start()  # the script will block here until crawling is finished
 
 
 if __name__ == '__main__':
@@ -76,5 +81,4 @@ if __name__ == '__main__':
     else:
         site_list = scraper.get_sites_to_run()
 
-    logger.debug("in main")
     scraper.main(site_list)

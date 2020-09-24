@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 
 CMD ["cd", "/malicious_file_crawler"]
 
-CMD [ "python", "-m", "src.glasswall_crawler_runner","DASMAL" ]
+CMD [ "python", "-m", "src.glasswall_crawler_runner"]

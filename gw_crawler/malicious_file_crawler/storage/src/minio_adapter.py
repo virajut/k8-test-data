@@ -1,9 +1,10 @@
 import logging
 
-from storage.src.base_adapter import BaseStorageAdapter
 from minio import Minio, ResponseError
+from storage.src.base_adapter import BaseStorageAdapter
 
 logger = logging.getLogger()
+
 
 class MinioAdapter(BaseStorageAdapter):
     def __init__(self, config, *args, **kwargs):
