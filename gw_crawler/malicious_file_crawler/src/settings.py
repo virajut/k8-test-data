@@ -10,14 +10,13 @@ import os
 
 from src.constants import zip_download_path
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
 from dotenv import load_dotenv
 env_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
 PROJECT_NAME = 'malicious_file_crawler'
 # Define JOBDIR path for pausing and resuming crawls
-JOB_DIR = 'crawls/glasswallspider-1'
+JOB_DIR = 'crawls/spiders'
 
 # scrapyd endpoint
 #SCRAPYD_ENDPOINT = 'http://localhost:6800'
@@ -55,11 +54,44 @@ ROBOTSTXT_OBEY = False
 CONCURRENT_REQUESTS = 32
 REACTOR_THREADPOOL_MAXSIZE = 20
 
+# Configure a delay for requests for the same website (default: 0)
+# See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
+# See also autothrottle settings and docs
+# DOWNLOAD_DELAY = 3
+# The download delay setting will honor only one of:
+# CONCURRENT_REQUESTS_PER_DOMAIN = 16
+# CONCURRENT_REQUESTS_PER_IP = 16
+
+# Disable cookies (enabled by default)
+# COOKIES_ENABLED = False
+
+# Disable Telnet Console (enabled by default)
+# TELNETCONSOLE_ENABLED = False
+
+# Override the default request headers:
+# DEFAULT_REQUEST_HEADERS = {
+#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+#   'Accept-Language': 'en',
+# }
+
+# Enable or disable spider middlewares
+# See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+# SPIDER_MIDDLEWARES = {
+#    'src.middlewares.MaliciousFileCrawlerSpiderMiddleware': 543,
+# }
+
+# Enable or disable downloader middlewares
+# See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     "src.pipelines.MaliciousFileCrawlerPipeline": 1,
     'src.middlewares.MaliciousFileCrawlerDownloaderMiddleware': 543,
 
 }
+
+# Enable or disable extensions
+# See https://docs.scrapy.org/en/latest/topics/extensions.html
+
+
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {

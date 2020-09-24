@@ -66,7 +66,9 @@ class GlassWallRunner(object):
         for site, cfg in site_arr.items():
             """ run crawler for every site and get response list """
             self.run_spiders(cfg)
-        self.process.start()  # the script will block here until crawling is finished
+
+        # the script will block here until crawling is finished
+        self.process.start()
 
 
 if __name__ == '__main__':
