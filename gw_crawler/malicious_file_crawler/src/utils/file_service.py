@@ -48,8 +48,8 @@ class FileService:
             for file in file_paths:
                 zipObj.write(file, file.split("/")[-1])
             zipObj.close()
-        except Exception:
-            logger.error("FileService:zip_files: error")
+        except Exception as e:
+            logger.error(f"FileService:zip_files: error while zipping: {e}")
             return None
         else:
             return fname

@@ -9,17 +9,18 @@
 import os
 
 from src.constants import zip_download_path
+
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 from dotenv import load_dotenv
+
 env_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
 PROJECT_NAME = 'malicious_file_crawler'
 # Define JOBDIR path for pausing and resuming crawls
 JOB_DIR = 'crawls/spiders'
-
 # scrapyd endpoint
-#SCRAPYD_ENDPOINT = 'http://localhost:6800'
+# SCRAPYD_ENDPOINT = 'http://localhost:6800'
 
 # EXTENSIONS = {
 #    'scrapy_dotpersistence.DotScrapyPersistence': 0,

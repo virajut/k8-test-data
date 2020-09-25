@@ -12,8 +12,15 @@ from src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
 from src.items import MaliciousFileCrawlerItem
 
+logger = logging.getLogger(__name__)
+
 
 class VirusShareScraper(Scraper):
+    """
+        virus share api https://virusshare.com/apiv2/
+        hash url https://virusshare.com/hashfiles/unpacked_hashes.md5
+        Get the malware url using hashes and api and send it to storage
+    """
     name = 'virusshare'
     # Allow duplicate url request (we will be crawling "page 1" twice)
     # custom_settings will only apply these settings in this spider
@@ -32,11 +39,12 @@ class VirusShareScraper(Scraper):
         self.api_key = self.cfg.get('vs_api_key')
 
     def start_requests(self):
+        logger.info(f'Site url : {self.base_url}')
         yield scrapy.Request(url=self.base_url, callback=self.parser)
 
     def parser(self, response):
         logger.debug("download_files")
-
+        
         hashes = self.scrape_hashes()
 
         for _hash in hashes:

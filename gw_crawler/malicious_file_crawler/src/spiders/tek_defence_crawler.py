@@ -9,6 +9,10 @@ from src.spiders.scraper import Scraper
 
 
 class TekDefenceScraper(Scraper):
+    """
+        Crawler site https://das-malwerk.herokuapp.com/
+        Getting the malware url from site and send it to storage pipeline
+    """
     name = 'tekdefence'
 
     # Allow duplicate url request (we will be crawling "page 1" twice)

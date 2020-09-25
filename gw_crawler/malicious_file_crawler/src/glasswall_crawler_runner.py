@@ -59,6 +59,7 @@ class GlassWallRunner(object):
     """ Instantiate crawler for every site with respective configuration, start crawler engine """
 
     def run_spiders(self, cfg, data=None):
+        logger.info(f"GlassWallRunner:run_spiders:: Spider is {cfg.get('name')}")
         spider = cfg.get('name')
         self.process.crawl(spider, config=cfg, data=data)
 

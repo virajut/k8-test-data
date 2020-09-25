@@ -18,6 +18,7 @@ class MaliciousCheck:
             response = vt.file_scan(file_path)
             report = vt.file_report([response['json_resp']['resource']])
         except KeyError:
+            logger.error('Invalid configaration for VIRUS_TOTAL_KEY,Configure VIRUS_TOTAL_KEY in .env file ')
             raise ("Invalid configaration for VIRUS_TOTAL_KEY,Configure VIRUS_TOTAL_KEY in .env file ")
         except Exception as error:
             logger.error(f"MaliciousCheck:check_malicious: {error}")
