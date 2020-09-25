@@ -1,5 +1,28 @@
 version: '3.6'
 services:
+  minio:
+    image: minio/minio:RELEASE.2020-09-08T23-05-18Z
+    volumes:
+      - data1-1:/data
+    ports:
+      - "9001:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio1
+      MINIO_SECRET_KEY: minio1@123
+    command: server /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: k8-rabbit
+    ports:
+      - 5672:5672
+      - 15672:15672
+
   glasswall-crawler:
     image: glasswallcrawler:1.0
     build:
@@ -25,21 +48,28 @@ services:
     links:
       - minio
 
-  minio:
-    image: minio/minio:RELEASE.2020-09-08T23-05-18Z
-    volumes:
-      - data1-1:/data
-    ports:
-      - "9001:9000"
-    environment:
-      MINIO_ACCESS_KEY: minio1
-      MINIO_SECRET_KEY: minio1@123
-    command: server /data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+  k8-file-processor:
+    image: k8-file-processor
+    build:
+      context: .
+      dockerfile: file_processor/Dockerfile
+    env_file:
+      - file_processor/.env
+    links:
+      - minio
+      - rabbitmq
+    depends_on:
+      - rabbitmq
+
+  rabbitmq-receiver:
+    image: rabbitmq-receiver
+    build:
+      context: .
+      dockerfile: rabbitmq_receiver/Dockerfile
+    env_file:
+      - rabbitmq_receiver/.env
+    depends_on:
+      - rabbitmq
 
 volumes:
   data1-1: 
