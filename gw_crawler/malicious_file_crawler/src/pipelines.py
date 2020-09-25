@@ -11,7 +11,7 @@ from scrapy.utils.misc import md5sum
 from six import BytesIO
 from src.constants import zip_download_path
 
-from .utils.bundle_zip import BundleZip, FileService
+from .utils.minio_client import MinioClient
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +39,30 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
                 buf.seek(0)
                 self.store.persist_file(path, buf, info)
                 downloaded_file_path = zip_download_path + "/" + path
-
-                spider_name = info.spider.name
-                metadata = FileService.get_file_meta(downloaded_file_path)
-                minio_path = metadata['extension'] + "/" + path.split("/")[-1]
-
-                BundleZip.store(spider_name, minio_path, downloaded_file_path)
+                bucket_name = "zip"
+                minio_path = path.split("/")[-1]
+                MaliciousFileCrawlerPipeline.store(bucket_name, minio_path, downloaded_file_path)
 
                 return checksum
 
         except Exception as err:
             logger.error(f'MaliciousFileCrawlerPipeline:file_downloaded: {err}')
             raise err
+
+    @staticmethod
+    def store(bucket_name, minio_path, bundle_zip):
+        """
+            Create bucket
+            Store object in minio
+        """
+        try:
+            client = MinioClient.get_client()
+            if not client.bucket_exists(bucket_name):
+                client.create_bucket(bucket_name)
+
+            if not client.bucket_exists(bucket_name):
+                client.create_bucket(bucket_name)
+            client.upload_file(bucket_name, minio_path, bundle_zip)
+        except Exception as e:
+            logger.error(f'BundleZip:store:Error while processing file {e}')
+            raise e
