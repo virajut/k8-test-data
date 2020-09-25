@@ -24,7 +24,6 @@ class Minio:
 
         try:
             self.s3.Bucket(bucket).download_file(file_name, file_name + "/" + file_name)
-            print("downloaded", file_name)
         except ClientError as e:
             if e.response["Error"]["Code"] == "404":
                 logger.info("The object does not exist.")

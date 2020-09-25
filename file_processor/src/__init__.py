@@ -12,9 +12,8 @@ def create_app():
     @app.route("/process", methods=["POST"])
     def get_files():
         data = request.json
-        print(data)
         """
-        To do process file
+        To do process file 
         """
 
     return app
