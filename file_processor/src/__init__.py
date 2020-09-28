@@ -15,5 +15,9 @@ def create_app():
         """
         To do process file 
         """
+        msg = data.get("msg", None)
+        if not msg:
+            return jsonify({"message": "No msg"})
+            
 
     return app
