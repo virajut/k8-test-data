@@ -9,7 +9,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from src.utils.read_config import ConfigReader
 
-logging.basicConfig(filename="testdata.log",
+logging.basicConfig(filename="testdata_scrapper.log",
                     format='%(asctime)s %(message)s',
                     filemode='w')
 

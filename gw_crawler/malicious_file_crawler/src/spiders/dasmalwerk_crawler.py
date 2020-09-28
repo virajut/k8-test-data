@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """ Scraper class for getting malicious files from tech defence portal """
+import logging
+
 import scrapy
 from lxml import html as html_xml
 from scrapy.loader import ItemLoader
 from src.items import MaliciousFileCrawlerItem
 from src.spiders.scraper import Scraper
+
+logger = logging.getLogger(__name__)
 
 
 class DasMalwerkScraper(Scraper):
@@ -13,12 +17,6 @@ class DasMalwerkScraper(Scraper):
         Getting the malware url from site and send it to storage pipeline
     """
     name = 'dasmalwerk'
-    # Allow duplicate url request (we will be crawling "page 1" twice)
-    # custom_settings will only apply these settings in this spider
-    custom_settings = {
-        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'ROBOTSTXT_OBEY': False,
-    }
 
     def __init__(self, config=None, data=None):
         super(DasMalwerkScraper, self).__init__()
@@ -27,20 +25,30 @@ class DasMalwerkScraper(Scraper):
 
     def start_requests(self):
         """ inbuilt start method called by scrapy when initializing crawler. """
-        yield scrapy.Request(self.file_urls, callback=self.navigate_to)
+        try:
+            yield scrapy.Request(self.file_urls, callback=self.navigate_to)
+        except Exception as err:
+            logger.error(f"DasMalwerkScraper:start_requests {err}")
+            raise err
 
     def navigate_to(self, response):
-        yield scrapy.Request(self.file_urls,
-                             callback=self.download_files)
+        try:
+            yield scrapy.Request(self.file_urls,
+                                 callback=self.download_files)
+        except Exception as err:
+            logger.error(f"DasMalwerkScraper:navigate_to {err}")
+            raise err
 
     def download_files(self, response):
         # get download file link
-        html = html_xml.fromstring(response.text)
-        file_download_link_elements = html.xpath("//tr//td[2]/a/@href")
-
-        loader = ItemLoader(item=MaliciousFileCrawlerItem())
-
-        for link in file_download_link_elements:
-            # self.state['items_count'] = self.state.get('items_count', 0) + 1
-            loader.add_value('file_urls', link)
-            yield loader.load_item()
+        try:
+            html = html_xml.fromstring(response.text)
+            file_download_link_elements = html.xpath("//tr//td[2]/a/@href")
+            loader = ItemLoader(item=MaliciousFileCrawlerItem())
+            for link in file_download_link_elements:
+                # self.state['items_count'] = self.state.get('items_count', 0) + 1
+                loader.add_value('file_urls', link)
+                yield loader.load_item()
+        except Exception as err:
+            logger.error(f"DasMalwerkScraper:download_files {err}")
+            raise err

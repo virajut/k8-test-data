@@ -1,8 +1,8 @@
+import json
 import logging
 
 import requests
 
-logger = logging.getLogger("GW:gw_scraper")
 # -*- coding: utf-8 -*-
 """ Scraper class for getting malicious files from virus share portal """
 import scrapy
@@ -26,7 +26,12 @@ class VirusShareScraper(Scraper):
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'ROBOTSTXT_OBEY': False,
+
+        'AUTOTHROTTLE_ENABLED': True,
+        'AUTOTHROTTLE_START_DELAY':15,
+        'RANDOMIZE_DOWNLOAD_DELAY': False,
+        'CONCURRENT_REQUESTS': 1,
+        'DOWNLOAD_DELAY': 30,
     }
 
     def __init__(self, config=None, data=None):
@@ -38,21 +43,35 @@ class VirusShareScraper(Scraper):
         self.request_mode = "download"
         self.api_key = self.cfg.get('vs_api_key')
 
+
     def start_requests(self):
-        logger.info(f'Site url : {self.base_url}')
-        yield scrapy.Request(url=self.base_url, callback=self.parser)
+        try:
+            logger.info(f'Site url : {self.base_url}')
+            yield scrapy.Request(url=self.base_url, callback=self.parser)
+        except Exception as error:
+            logger.error(f"MalShareScraper:start_requests: {error}")
+            raise error
 
     def parser(self, response):
-        logger.debug("download_files")
-        
-        hashes = self.scrape_hashes()
+        try:
+            logger.debug("download_files")
 
-        for _hash in hashes:
-            url = self.url.format(self.request_mode, self.api_key, _hash)
-            html = html_xml.fromstring(url)
-            loader = ItemLoader(item=MaliciousFileCrawlerItem())
-            loader.add_value('file_urls', url)
-            yield loader.load_item()
+            hashes = self.scrape_hashes()
+
+            for _hash in hashes:
+                url = self.url.format(self.request_mode, self.api_key, _hash)
+                file_details_url = self.url.format("file", self.api_key, _hash)
+                details=VirusShareScraper.get(file_details_url)
+                json_str=details.content
+                json_details = json.loads(json_str)
+                loader = ItemLoader(item=MaliciousFileCrawlerItem())
+                loader.add_value('extension', json_details['exif']['FileTypeExtension'])
+                loader.add_value('file_urls', url)
+                yield loader.load_item()
+
+        except Exception as err:
+            logger.error(f'VirusShareScraper : parser : {err}')
+            raise err
 
     def scrape_hashes(self):
         """
@@ -70,6 +89,8 @@ class VirusShareScraper(Scraper):
                 continue
         return hashes
 
+
+    @staticmethod
     def get(url):
         headers = {
             "Accept": "text/html, application/xhtml+xml, application/xml",

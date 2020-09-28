@@ -8,7 +8,7 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 import os
 
-from src.constants import zip_download_path
+from src.constants import DOWNLOAD_PATH
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 from dotenv import load_dotenv
@@ -103,7 +103,7 @@ ITEM_PIPELINES = {
 DOWNLOAD_TIMEOUT = 12000
 
 MEDIA_ALLOW_REDIRECTS = True
-FILES_STORE = zip_download_path
+FILES_STORE = DOWNLOAD_PATH
 
 # Uncomment this when MINIO service is running
 # max download size of 5gb

@@ -1,12 +1,15 @@
 # coding: utf-8
 # !/usr/bin/env python
 import logging
-logger = logging.getLogger(__name__)
+
 import requests
 import scrapy
-from src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
 from src.items import MaliciousFileCrawlerItem
+from src.spiders.scraper import Scraper
+
+logger = logging.getLogger(__name__)
+
 
 class MalShareScraper(Scraper):
     """
@@ -16,35 +19,41 @@ class MalShareScraper(Scraper):
     """
 
     name = 'malshare'
+
     # Allow duplicate url request (we will be crawling "page 1" twice)
     # custom_settings will only apply these settings in this spider
-    custom_settings = {
-        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'ROBOTSTXT_OBEY': False,
-    }
 
     def __init__(self, config=None, data=None):
         super(MalShareScraper, self).__init__()
         self.cfg = config
         self.API_KEY = self.cfg.get('api_key')
         self.API_URL = self.cfg.get('api_base_url')
-        self.base_url=self.cfg.get('base_url')
-        self.url=self.cfg.get('api_url')
-
+        self.base_url = self.cfg.get('base_url')
+        self.url = self.cfg.get('api_url')
 
     def start_requests(self):
-        logger.info(f'Site url : {self.base_url}')
-        yield scrapy.Request(url=self.base_url, callback=self.parser)
+        try:
+            logger.info(f'Site url : {self.base_url}')
+            yield scrapy.Request(url=self.base_url, callback=self.parser)
+        except Exception as err:
+            logger.error(f'MalShareScraper : start_requests : {err}')
+            raise err
 
     def parser(self, response):
-        logger.debug("download_files")
-        hashes = self.get_hases()
-        for _hash in hashes:
-            details=self.getfiledetails(file_hash=_hash)
-            url = self.url.format(self.API_KEY, _hash)
-            loader = ItemLoader(item=MaliciousFileCrawlerItem())
-            loader.add_value('file_urls', url)
-            yield loader.load_item()
+        try:
+            logger.debug("download_files")
+            hashes = self.get_hases()
+            for _hash in hashes:
+                details = self.getfiledetails(file_hash=_hash)
+                url = self.url.format(self.API_KEY, _hash)
+                loader = ItemLoader(item=MaliciousFileCrawlerItem())
+                loader.add_value('file_urls', url)
+                loader.add_value('extension', details["F_TYPE"])
+                yield loader.load_item()
+
+        except Exception as err:
+            logger.error(f'MalShareScraper : parser : {err}')
+            raise err
 
     def get_response(self, payload, output='json'):
         """
