@@ -1,12 +1,13 @@
 import json
 import logging
+import os
+from time import sleep
 
 import requests
 
 # -*- coding: utf-8 -*-
 """ Scraper class for getting malicious files from virus share portal """
 import scrapy
-from lxml import html as html_xml
 
 from src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
@@ -26,10 +27,10 @@ class VirusShareScraper(Scraper):
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-
-        'AUTOTHROTTLE_ENABLED': True,
-        'AUTOTHROTTLE_START_DELAY':15,
+        'AUTOTHROTTLE_ENABLED': False,
+        'AUTOTHROTTLE_START_DELAY': 15,
         'RANDOMIZE_DOWNLOAD_DELAY': False,
+        'AUTOTHROTTLE_TARGET_CONCURRENCY':1,
         'CONCURRENT_REQUESTS': 1,
         'DOWNLOAD_DELAY': 30,
     }
@@ -41,8 +42,7 @@ class VirusShareScraper(Scraper):
         self.url = self.cfg.get('virusshare_url')
         self.hash_url = self.cfg.get('virusshare_hash_url')
         self.request_mode = "download"
-        self.api_key = self.cfg.get('vs_api_key')
-
+        self.api_key = self.cfg.get('vs_api_key',vars=os.environ)
 
     def start_requests(self):
         try:
@@ -59,10 +59,11 @@ class VirusShareScraper(Scraper):
             hashes = self.scrape_hashes()
 
             for _hash in hashes:
+                sleep(15)
                 url = self.url.format(self.request_mode, self.api_key, _hash)
                 file_details_url = self.url.format("file", self.api_key, _hash)
-                details=VirusShareScraper.get(file_details_url)
-                json_str=details.content
+                details = VirusShareScraper.get(file_details_url)
+                json_str = details.content
                 json_details = json.loads(json_str)
                 loader = ItemLoader(item=MaliciousFileCrawlerItem())
                 loader.add_value('extension', json_details['exif']['FileTypeExtension'])
@@ -88,7 +89,6 @@ class VirusShareScraper(Scraper):
             except Exception as error:
                 continue
         return hashes
-
 
     @staticmethod
     def get(url):

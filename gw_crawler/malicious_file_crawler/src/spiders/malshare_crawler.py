@@ -1,6 +1,7 @@
 # coding: utf-8
 # !/usr/bin/env python
 import logging
+import os
 
 import requests
 import scrapy
@@ -26,7 +27,7 @@ class MalShareScraper(Scraper):
     def __init__(self, config=None, data=None):
         super(MalShareScraper, self).__init__()
         self.cfg = config
-        self.API_KEY = self.cfg.get('api_key')
+        self.API_KEY = self.cfg.get('api_key',vars=os.environ)
         self.API_URL = self.cfg.get('api_base_url')
         self.base_url = self.cfg.get('base_url')
         self.url = self.cfg.get('api_url')

@@ -10,6 +10,12 @@ from twisted.internet.error import TimeoutError
 
 
 class Scraper(scrapy.Spider):
+    # Allow duplicate url request (we will be crawling "page 1" twice)
+    # custom_settings will only apply these settings in this spider
+    custom_settings = {
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+        'ROBOTSTXT_OBEY': False,
+    }
 
     def __init__(self, *args, **kwargs):
         super(Scraper, self).__init__(*args, **kwargs)
