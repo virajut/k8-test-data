@@ -30,7 +30,7 @@ class Consumer:
         try:
             payload = json.loads(msg)
         except:
-            logger.info("Error loading json payload")
+            logger.error("Error loading json payload")
         else:
             handler = self.receivers.get(payload["type"], None)
             if not handler:
@@ -42,16 +42,19 @@ class Consumer:
 
     def connect(self):
         logger.info(f"Connecting to {self.host}")
-        self.connection = pika.SelectConnection(
-            parameters=pika.ConnectionParameters(host=self.host),
-            on_open_callback=self.on_connection_open,
-            on_open_error_callback=self.on_connection_open_error,
-            on_close_callback=self.on_connection_closed,
-        )
-        return self.connection
+        try:
+            self.connection = pika.SelectConnection(
+                parameters=pika.ConnectionParameters(host=self.host),
+                on_open_callback=self.on_connection_open,
+                on_open_error_callback=self.on_connection_open_error,
+                on_close_callback=self.on_connection_closed,
+            )
+            return self.connection
+        except:
+            logger.error(f"Error establishing connection to rabbitmq host {self.host}")
 
     def on_connection_open(self, _unused_connection):
-        logger.info("Connection opened")
+        logger.debug("Connection opened")
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue=self.queue)
         self.channel.basic_qos(prefetch_count=1)

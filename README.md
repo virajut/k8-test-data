@@ -82,3 +82,6 @@ Public malware reference - https://cyberlab.pacific.edu/resources/malware-sample
 
 `docker-compose up`
 
+### Run security check
+
+`python3 -m bandit --skip B605 -ll -r .`
