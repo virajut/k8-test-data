@@ -18,6 +18,5 @@ def create_app():
         msg = data.get("msg", None)
         if not msg:
             return jsonify({"message": "No msg"})
-            
 
     return app

@@ -4,13 +4,24 @@ import logging as logger
 
 logger.basicConfig(level=logger.INFO)
 
-class Consumer:
 
+class Consumer:
     def __init__(self):
         self.connection = None
         self.channel = None
-        self.host = os.environ.get('MQ_HOST')
-        self.queue = os.environ.get('MQ_QUEUE')
+        self.host = os.environ.get("MQ_HOST")
+        self.queue = os.environ.get("MQ_QUEUE")
+        self.receivers = {
+            "process_zip": self._handler_process_zip,
+            "s3_sync": self._handler_s3_sync,
+        }
+
+    def _handler_process_zip(self, payload):
+        logger.info("calling file_processor service..")
+        requests.post("http://k8-file-processor:5001/process", json=payload)
+
+    def _handler_s3_sync(self, payload):
+        logger.info("calling s3_sync service..")
 
     def on_message_receive(ch, method, properties, body):
         logger.info(" [x] Received ")
@@ -21,47 +32,42 @@ class Consumer:
         except:
             logger.info("Error loading json payload")
         else:
-            # to do
-            if "process_zip" == payload["type"]:
-                logger.info("calling file_processor service..")
-                requests.post("http://k8-file-processor:5001/process", json=payload)
-            elif "s3_sync" == payload["type"]:
-                logger.info("calling s3_sync service..")
-            else:
+            handler = self.receivers.get(payload["type"], None)
+            if not handler:
                 logger.info("invalid payload type.")
-            # to do
+            handler(payload)
 
         logger.info(" [x] Done")
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
-
     def connect(self):
-        logger.info(f'Connecting to {self.host}')
+        logger.info(f"Connecting to {self.host}")
         self.connection = pika.SelectConnection(
-                parameters=pika.ConnectionParameters(host=self.host),
-                on_open_callback=self.on_connection_open,
-                on_open_error_callback=self.on_connection_open_error,
-                on_close_callback=self.on_connection_closed
-            )
+            parameters=pika.ConnectionParameters(host=self.host),
+            on_open_callback=self.on_connection_open,
+            on_open_error_callback=self.on_connection_open_error,
+            on_close_callback=self.on_connection_closed,
+        )
         return self.connection
 
     def on_connection_open(self, _unused_connection):
-        logger.info('Connection opened')
+        logger.info("Connection opened")
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue=self.queue)
         self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(queue=self.queue, on_message_callback=self.on_message_receive)
+        self.channel.basic_consume(
+            queue=self.queue, on_message_callback=self.on_message_receive
+        )
         logger.info(" [*] starting receiver..")
         self.channel.start_consuming()
 
     def on_connection_open_error(self, _unused_connection, err):
-        logger.error('Connection open failed: %s', err)
+        logger.error("Connection open failed: %s", err)
 
     def on_connection_closed(self, _unused_connection, reason):
-        logger.warning('Connection closed, reconnect necessary: %s', reason)
+        logger.warning("Connection closed, reconnect necessary: %s", reason)
         self.channel.close()
         self.connection.close()
-
 
 
 if __name__ == "__main__":
