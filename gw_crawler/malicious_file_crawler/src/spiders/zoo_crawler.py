@@ -45,6 +45,7 @@ class ZooScraper(Scraper):
 
     def download_files(self, response):
         try:
+            logger.info(f'ZooScraper : download_files : {response}')
             zip_urls = []
             # get download file link
             html = html_xml.fromstring(response.text)

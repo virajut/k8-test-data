@@ -42,6 +42,7 @@ class DasMalwerkScraper(Scraper):
     def download_files(self, response):
         # get download file link
         try:
+            logger.info(f'DasMalwerkScraper : download_files : {response}')
             html = html_xml.fromstring(response.text)
             file_download_link_elements = html.xpath("//tr//td[2]/a/@href")
             loader = ItemLoader(item=MaliciousFileCrawlerItem())
