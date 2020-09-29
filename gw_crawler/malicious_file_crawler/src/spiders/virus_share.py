@@ -25,14 +25,8 @@ class VirusShareScraper(Scraper):
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'AUTOTHROTTLE_ENABLED': True,
-        'AUTOTHROTTLE_START_DELAY': 15,
-        'RANDOMIZE_DOWNLOAD_DELAY': False,
-        'AUTOTHROTTLE_TARGET_CONCURRENCY': 1,
         'CONCURRENT_REQUESTS': 1,
-        'DOWNLOAD_DELAY': 30,
-        'AUTOTHROTTLE_DEBUG': True,
-        'CONCURRENT_REQUESTS_PER_DOMAIN': 1,
+        'DOWNLOAD_DELAY': 15,
     }
 
     def __init__(self, config=None, data=None):
@@ -51,6 +45,7 @@ class VirusShareScraper(Scraper):
         try:
             logger.info(f'Site url : {self.base_url}')
             hashes = self.scrape_hashes()
+
             for _hash in hashes:
                 yield scrapy.Request(url=self.base_url, callback=self.parser, meta={'hash': _hash})
         except Exception as error:
@@ -62,6 +57,7 @@ class VirusShareScraper(Scraper):
             Retrieves api url and get file type and load it to loader
         """
         try:
+            print(response)
             logger.info(f"VirusShareScraper : parser : hash : {response.meta['hash']}")
             if response.status == 200:
                 url = self.url.format(self.request_mode, self.api_key, response.meta['hash'])
