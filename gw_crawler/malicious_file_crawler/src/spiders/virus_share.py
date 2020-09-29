@@ -57,7 +57,6 @@ class VirusShareScraper(Scraper):
             Retrieves api url and get file type and load it to loader
         """
         try:
-            print(response)
             logger.info(f"VirusShareScraper : parser : hash : {response.meta['hash']}")
             if response.status == 200:
                 url = self.url.format(self.request_mode, self.api_key, response.meta['hash'])
