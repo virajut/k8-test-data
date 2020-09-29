@@ -1,14 +1,17 @@
 import os
+import logging
+
+logger = logging.getLogger("GW:file_processor")
 
 
 def get_envar(k, required=True):
     val = os.environ.get(k, None)
     if not val and required:
-        exit(f"{k} not supplied")
+        msg = f"{k} not supplied"
+        logger.info(msg)
+        exit(msg)
     return val
 
 
 class Config(object):
-    DEBUG = True
-    auth_token = get_envar("auth_token", False)
     download_path = "/usr/src/app"

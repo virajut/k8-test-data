@@ -69,6 +69,8 @@ Public malware reference - https://cyberlab.pacific.edu/resources/malware-sample
 
 * Set .env file in each service [ gw_crawler, file_processor, file_distribution ]
 
+`docker build -t rabbitmq-receiver rabbitmq_receiver`
+
 `docker build -t glasswallcrawler:1.0 gw_crawler`
 
 `docker build -t k8-file-processor file_processor`
@@ -80,3 +82,6 @@ Public malware reference - https://cyberlab.pacific.edu/resources/malware-sample
 
 `docker-compose up`
 
+### Run security check
+
+`python3 -m bandit --skip B605 -ll -r .`
