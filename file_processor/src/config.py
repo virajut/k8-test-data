@@ -15,3 +15,6 @@ def get_envar(k, required=True):
 
 class Config(object):
     download_path = "/usr/src/app"
+    MINIO_URL = get_envar("MINIO_URL")
+    MINIO_ACCESS_KEY = get_envar("MINIO_ACCESS_KEY")
+    MINIO_SECRET_KEY = get_envar("MINIO_SECRET_KEY")
