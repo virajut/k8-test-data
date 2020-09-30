@@ -6,28 +6,28 @@ from botocore.client import Config
 from botocore.exceptions import ClientError
 from src.config import Config as AppConfig
 
-logger = logging.getLogger("GW:minio")
+logger = logging.getLogger("GW:to_s3")
 
 
 class S3Client:
 
-    def __init__(self, endpoint, access_key, secret_key, region=None):
-        self.region = region
-        self.s3 = boto3.resource(
-            "s3",
-            endpoint_url=endpoint,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            config=Config(signature_version="s3v4"),
-            region=region
-        )
+    def __init__(self):
+        self.region = AppConfig.S3_REGION
 
+        try:
+            self.s3 = boto3.resource(
+                "s3",
+                endpoint_url=AppConfig.S3_ENDPOINT,
+                aws_access_key_id=AppConfig.S3_ACCESS_KEY_ID,
+                aws_secret_access_key=AppConfig.S3_SECRET_ACCESS_KEY,
+                config=Config(signature_version="s3v4"),
+                region=AppConfig.S3_REGION
+            )
+            logger.info("Connected to S3 endpoint")
+        except Exception as err:
+            logger.error(err)
+            raise Exception("Unable to connect to S3 endpoint")
 
-    """
-        1. Check if bucket exists
-        2. Check if file already exists
-        3. Upload the file
-    """
     
     def bucket_exists(self, bucket_name):
         if self.s3.meta.client.head_bucket(Bucket=bucket_name):
@@ -54,11 +54,11 @@ class S3Client:
             object_name = file_name
         try:
             self.s3.upload_file(file_name, bucket_name, object_name)
-            logger.info(f"Uploaded file: {0}".format(file_name))
+            logger.info(f"File uploaded to S3: {0}".format(file_name))
+            return True
         except ClientError as e:
             logging.error(e)
-            return False
-        return True
+            raise Exception("Unable to upload the file to S3 server.")
 
     def get_policy(self, bucket_name):
         policy = self.s3.get_bucket_policy(bucket_name)
