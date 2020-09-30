@@ -70,6 +70,18 @@ services:
       - rabbitmq_receiver/.env
     depends_on:
       - rabbitmq
+  
+  to_s3:
+    image: to-s3
+    build:
+      context: .
+      dockerfile: to_s3/Dockerfile
+    env_file:
+      - to_s3/.env
+    ports:
+      - 5003:5001
+    links:
+      - minio
 
 volumes:
   data1-1: 
