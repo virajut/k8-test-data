@@ -63,7 +63,9 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 ### Build
 
-* Set .env file in each service [ gw_crawler, file_processor, file_distribution ]
+* Set .env file in each service
+
+`docker build -t rabbitmq-receiver rabbitmq_receiver`
 
 `docker build -t glasswallcrawler:1.0 gw_crawler`
 
@@ -71,8 +73,13 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 `docker build -t k8-file-distribution file_distribution`
 
+`docker build -t glasswall-rebuild  glasswall_rebuild`
+
 
 ### Run
 
 `docker-compose up`
 
+### Run security check
+
+`python3 -m bandit --skip B605 -ll -r .`

@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from time import sleep
 
 import requests
 
@@ -15,7 +14,6 @@ from src.items import MaliciousFileCrawlerItem
 
 logger = logging.getLogger(__name__)
 
-
 class VirusShareScraper(Scraper):
     """
         virus share api https://virusshare.com/apiv2/
@@ -27,12 +25,8 @@ class VirusShareScraper(Scraper):
     # custom_settings will only apply these settings in this spider
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
-        'AUTOTHROTTLE_ENABLED': False,
-        'AUTOTHROTTLE_START_DELAY': 15,
-        'RANDOMIZE_DOWNLOAD_DELAY': False,
-        'AUTOTHROTTLE_TARGET_CONCURRENCY':1,
         'CONCURRENT_REQUESTS': 1,
-        'DOWNLOAD_DELAY': 30,
+        'DOWNLOAD_DELAY': 15,
     }
 
     def __init__(self, config=None, data=None):
@@ -42,26 +36,31 @@ class VirusShareScraper(Scraper):
         self.url = self.cfg.get('virusshare_url')
         self.hash_url = self.cfg.get('virusshare_hash_url')
         self.request_mode = "download"
-        self.api_key = self.cfg.get('vs_api_key',vars=os.environ)
+        self.api_key = self.cfg.get('vs_api_key', vars=os.environ)
 
     def start_requests(self):
+        """
+            start_requests get hashes and send it to parser
+        """
         try:
             logger.info(f'Site url : {self.base_url}')
-            yield scrapy.Request(url=self.base_url, callback=self.parser)
+            hashes = self.scrape_hashes()
+
+            for _hash in hashes:
+                yield scrapy.Request(url=self.base_url, callback=self.parser, meta={'hash': _hash})
         except Exception as error:
             logger.error(f"MalShareScraper:start_requests: {error}")
             raise error
 
     def parser(self, response):
+        """
+            Retrieves api url and get file type and load it to loader
+        """
         try:
-            logger.debug("download_files")
-
-            hashes = self.scrape_hashes()
-
-            for _hash in hashes:
-                sleep(15)
-                url = self.url.format(self.request_mode, self.api_key, _hash)
-                file_details_url = self.url.format("file", self.api_key, _hash)
+            logger.info(f"VirusShareScraper : parser : hash : {response.meta['hash']}")
+            if response.status == 200:
+                url = self.url.format(self.request_mode, self.api_key, response.meta['hash'])
+                file_details_url = self.url.format("file", self.api_key, response.meta['hash'])
                 details = VirusShareScraper.get(file_details_url)
                 json_str = details.content
                 json_details = json.loads(json_str)

@@ -1,2 +1,3 @@
 boto3==1.14.57
 Flask==1.1.2
+requests==2.23.0

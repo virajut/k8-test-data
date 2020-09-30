@@ -47,6 +47,7 @@ class TekDefenceScraper(Scraper):
     def download_files(self, response):
         # get download file link
         try:
+            logger.info(f'TekDefenceScraper : parser : {response}')
             file_download_link_elements = response.xpath("//h3[@class='title']/a/@href")
             loader = ItemLoader(item=MaliciousFileCrawlerItem())
             for link_element in file_download_link_elements:

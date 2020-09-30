@@ -18,6 +18,9 @@ class MalShareScraper(Scraper):
             api url http://www.malshare.com/api.php
             Get the malware url using hashes and api and send it to storage
     """
+    custom_settings = {
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+    }
 
     name = 'malshare'
 
@@ -42,9 +45,9 @@ class MalShareScraper(Scraper):
 
     def parser(self, response):
         try:
-            logger.debug("download_files")
             hashes = self.get_hases()
             for _hash in hashes:
+                logger.info(f'MalShareScraper : parser : {_hash}')
                 details = self.getfiledetails(file_hash=_hash)
                 url = self.url.format(self.API_KEY, _hash)
                 loader = ItemLoader(item=MaliciousFileCrawlerItem())
