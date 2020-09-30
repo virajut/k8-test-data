@@ -10,9 +10,15 @@ from twisted.internet.error import TimeoutError
 
 
 class Scraper(scrapy.Spider):
+    # Allow duplicate url request (we will be crawling "page 1" twice)
+    # custom_settings will only apply these settings in this spider
+    custom_settings = {
+        'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
+        'ROBOTSTXT_OBEY': False,
+    }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Scraper, self).__init__(*args, **kwargs)
 
     """ scrapy starts crawling by calling this method """
 
@@ -27,9 +33,6 @@ class Scraper(scrapy.Spider):
     """ generic login request method """
 
     def login(self, token, url, callback_method, config):
-
-        self.logger.debug("Scraper::login::Authenticating with login url: %s" % url)
-
         tokens = {val.split(',')[0]: val.split(',')[1] for key, val in config.items() if "token" in key}
 
         form_data = {
@@ -39,8 +42,6 @@ class Scraper(scrapy.Spider):
 
         # merge credentials dict with token dict
         form_data.update(tokens)
-
-        self.logger.debug("Scraper::login::Form data: %s" % form_data)
         return scrapy.FormRequest(
             url,
             formdata=form_data,

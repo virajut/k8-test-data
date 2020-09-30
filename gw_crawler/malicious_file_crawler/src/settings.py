@@ -8,14 +8,30 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 import os
 
-from src.constants import zip_download_path
+from src.constants import DOWNLOAD_PATH
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
 from dotenv import load_dotenv
 
+env_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
+PROJECT_NAME = 'malicious_file_crawler'
+# Define JOBDIR path for pausing and resuming crawls
+JOB_DIR = 'crawls/spiders'
+# scrapyd endpoint
+# SCRAPYD_ENDPOINT = 'http://localhost:6800'
+
+# EXTENSIONS = {
+#    'scrapy_dotpersistence.DotScrapyPersistence': 0,
+# }
+
+# DOTSCRAPY_ENABLED = True
+#
+# ADDONS_AWS_ACCESS_KEY_ID ='AWS ACCESS KEY'
+# ADDONS_AWS_SECRET_ACCESS_KEY ="AWS SECRET KEY"
+# # ADDONS_AWS_USERNAME = "username"
+# ADDONS_S3_BUCKET = "BUCKET NAME"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Get the path to the directory this file is in
@@ -37,6 +53,7 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 CONCURRENT_REQUESTS = 32
+REACTOR_THREADPOOL_MAXSIZE = 20
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -67,25 +84,26 @@ CONCURRENT_REQUESTS = 32
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
+    "src.pipelines.MaliciousFileCrawlerPipeline": 1,
     'src.middlewares.MaliciousFileCrawlerDownloaderMiddleware': 543,
+
 }
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-# EXTENSIONS = {
-#    'scrapy.extensions.telnet.TelnetConsole': None,
-# }
+
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "src.pipelines.MaliciousFileCrawlerPipeline": 1
+    "src.pipelines.MaliciousFileCrawlerPipeline": 300,
+
 }
 
 DOWNLOAD_TIMEOUT = 12000
 
 MEDIA_ALLOW_REDIRECTS = True
-FILES_STORE = zip_download_path
+FILES_STORE = DOWNLOAD_PATH
 
 # Uncomment this when MINIO service is running
 # max download size of 5gb

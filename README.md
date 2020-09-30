@@ -44,11 +44,6 @@ Malware Public Repositories ( Proceed with caution when handling live malware) :
   - Requires login (free)
   - ZIP password is “infected"
 
-**Contagio**: http://contagiodump.blogspot.com/
-
-  - Requires password (free)
-  - Related blog: http://contagiominidump.blogspot.com/
-
 **The Zoo**: https://github.com/ytisf/theZoo
 
   - Look in malwares/Binaries subdirectory
@@ -64,6 +59,7 @@ Malware Public Repositories ( Proceed with caution when handling live malware) :
   - ZIP password is “infected”
 
 Public malware reference - https://cyberlab.pacific.edu/resources/malware-samples-for-students
+Note :  http://contagiodump.blogspot.com/ in above public reference not implemented since it is paid service and password for malware zip is not availble
 
 ### Build
 

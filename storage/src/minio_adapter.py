@@ -1,16 +1,25 @@
-from malicious_file_crawler.storage.src.base_adapter import BaseStorageAdapter
+import logging
+
 from minio import Minio, ResponseError
+
+from storage.src.base_adapter import BaseStorageAdapter
+
+logger = logging.getLogger()
 
 
 class MinioAdapter(BaseStorageAdapter):
-    def __init__(self, config, *args, **kwargs):
+    def __init__(self, endpoint=None, access_key=None, secret_key=None, secure=False, *args, **kwargs):
         # Initialize minioClient with an endpoint and access/secret keys.
 
         super().__init__(*args, **kwargs)
-        self._client = Minio(endpoint=config.get('HOSTNAME'),
-                             access_key=config.get('AWS_ACCESS_KEY_ID'),
-                             secret_key=config.get('AWS_SECRET_ACCESS_KEY'),
-                             secure=False)
+        try:
+            self._client = Minio(endpoint=endpoint,
+                                 access_key=access_key,
+                                 secret_key=secret_key,
+                                 secure=secure)
+        except KeyError as err:
+            logger.error(err)
+            raise Exception("Please enter proper HOSTNAME,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY in .env ")
 
     def bucket_exists(self, bucket_name):
         if self._client.bucket_exists(bucket_name):
@@ -18,13 +27,12 @@ class MinioAdapter(BaseStorageAdapter):
         return False
 
     def create_bucket(self, bucket_name):
-        if self._client.bucket_exists(bucket_name):
-            raise Exception(f"{bucket_name} already exists")
-        else:
-            try:
+
+        try:
+            if not self._client.bucket_exists(bucket_name):
                 self._client.make_bucket(bucket_name)
-            except ResponseError as err:
-                raise ResponseError
+        except ResponseError as err:
+            raise ResponseError
 
     def remove_bucket(self, bucket_name):
         try:
