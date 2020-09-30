@@ -1,4 +1,0 @@
-boto3==1.14.57
-Flask==1.1.2
-minio==6.0.0
-python-dotenv== 0.13.0
