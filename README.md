@@ -67,7 +67,7 @@ Public malware reference - https://cyberlab.pacific.edu/resources/malware-sample
 
 ### Build
 
-* Set .env file in each service [ gw_crawler, file_processor, file_distribution ]
+* Set .env file in each service
 
 `docker build -t rabbitmq-receiver rabbitmq_receiver`
 
@@ -76,6 +76,8 @@ Public malware reference - https://cyberlab.pacific.edu/resources/malware-sample
 `docker build -t k8-file-processor file_processor`
 
 `docker build -t k8-file-distribution file_distribution`
+
+`docker build -t glasswall-rebuild  glasswall_rebuild`
 
 
 ### Run

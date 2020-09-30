@@ -16,60 +16,71 @@ services:
       timeout: 20s
       retries: 3
 
-  # rabbitmq:
-  #   image: rabbitmq:3-management
-  #   hostname: k8-rabbit
-  #   ports:
-  #     - 5672:5672
-  #     - 15672:15672
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: k8-rabbit
+    ports:
+      - 5672:5672
+      - 15672:15672
 
-  # glasswall-crawler:
-  #   image: glasswallcrawler:1.0
-  #   build:
-  #     context: .
-  #     dockerfile: gw_crawler/Dockerfile
-  #   env_file:
-  #     - gw_crawler/.env
-  #   ports:
-  #     - 5002:5000
-  #   links:
-  #     - minio
+  glasswall-crawler:
+    image: glasswallcrawler:1.0
+    build:
+      context: .
+      dockerfile: gw_crawler/Dockerfile
+    env_file:
+      - gw_crawler/.env
+    ports:
+      - 5002:5000
+    links:
+      - minio
 
-  # k8-file-distribution:
-  #   image: k8-file-distribution
-  #   build:
-  #     context: .
-  #     dockerfile: file_distribution/Dockerfile
-  #   env_file:
-  #     - file_distribution/.env
-  #   ports:
-  #     - 50051:50051
-  #     - 5001:5001
-  #   links:
-  #     - minio
+  k8-file-distribution:
+    image: k8-file-distribution
+    build:
+      context: .
+      dockerfile: file_distribution/Dockerfile
+    env_file:
+      - file_distribution/.env
+    ports:
+      - 50051:50051
+      - 5001:5001
+    links:
+      - minio
 
-  # k8-file-processor:
-  #   image: k8-file-processor
-  #   build:
-  #     context: .
-  #     dockerfile: file_processor/Dockerfile
-  #   env_file:
-  #     - file_processor/.env
-  #   links:
-  #     - minio
-  #     - rabbitmq
-  #   depends_on:
-  #     - rabbitmq
+  k8-file-processor:
+    image: k8-file-processor
+    build:
+      context: .
+      dockerfile: file_processor/Dockerfile
+    env_file:
+      - file_processor/.env
+    links:
+      - minio
+      - rabbitmq
+    depends_on:
+      - rabbitmq
 
-  # rabbitmq-receiver:
-  #   image: rabbitmq-receiver
-  #   build:
-  #     context: .
-  #     dockerfile: rabbitmq_receiver/Dockerfile
-  #   env_file:
-  #     - rabbitmq_receiver/.env
-  #   depends_on:
-  #     - rabbitmq
+  rabbitmq-receiver:
+    image: rabbitmq-receiver
+    build:
+      context: .
+      dockerfile: rabbitmq_receiver/Dockerfile
+    env_file:
+      - rabbitmq_receiver/.env
+    depends_on:
+      - rabbitmq
 
+  glasswall-rebuild:
+    image: glasswall-rebuild
+    environment:
+      PYTHONUNBUFFERED: 0
+    build:
+      context: .
+      dockerfile: glasswall_rebuild/Dockerfile
+    ports:
+      - 5003:5003
+    
 volumes:
   data1-1: 
+  
