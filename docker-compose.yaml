@@ -23,6 +23,16 @@ services:
       - 5672:5672
       - 15672:15672
 
+  rabbitmq-receiver:
+    image: rabbitmq-receiver
+    build:
+      context: .
+      dockerfile: rabbitmq_receiver/Dockerfile
+    env_file:
+      - rabbitmq_receiver/.env
+    depends_on:
+      - rabbitmq
+      
   glasswall-crawler:
     image: glasswallcrawler:1.0
     build:
@@ -55,21 +65,14 @@ services:
       dockerfile: file_processor/Dockerfile
     env_file:
       - file_processor/.env
+    ports:
+      - 5000:5000
     links:
       - minio
       - rabbitmq
     depends_on:
       - rabbitmq
 
-  rabbitmq-receiver:
-    image: rabbitmq-receiver
-    build:
-      context: .
-      dockerfile: rabbitmq_receiver/Dockerfile
-    env_file:
-      - rabbitmq_receiver/.env
-    depends_on:
-      - rabbitmq
 
   glasswall-rebuild:
     image: glasswall-rebuild

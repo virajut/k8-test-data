@@ -31,3 +31,21 @@ class MinioService:
             else:
                 logger.info(e)
                 raise
+
+    def upload(self, file_path, bucket_name, filename):
+        try:
+            if (self.s3.Bucket(bucket_name) in self.s3.buckets.all()) == False:
+                self.s3.create_bucket(Bucket=bucket_name)
+            logger.info(
+                "Uploading file to bucket {} minio {}".format(bucket_name, self.url)
+            )
+            self.s3.Bucket(bucket_name).upload_file(file_path, filename)
+            return bucket_name + "/" + filename
+        except ClientError as e:
+            logger.error(
+                "Cannot connect to the minio {}. Please vefify the Credentials.".format(
+                    self.url
+                )
+            )
+        except Exception as e:
+            logger.error("ex : {}".format(e))
