@@ -63,7 +63,7 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 ### Build
 
-* Set .env file in each service [ gw_crawler, file_processor, file_distribution ]
+* Set .env file in each service
 
 `docker build -t rabbitmq-receiver rabbitmq_receiver`
 
@@ -72,6 +72,8 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 `docker build -t k8-file-processor file_processor`
 
 `docker build -t k8-file-distribution file_distribution`
+
+`docker build -t glasswall-rebuild  glasswall_rebuild`
 
 
 ### Run

@@ -18,7 +18,7 @@ class Consumer:
 
     def _handler_process_zip(self, payload):
         logger.info("calling file_processor service..")
-        requests.post("http://k8-file-processor:5001/process", json=payload)
+        requests.post("http://k8-file-processor:5000/process", json=payload)
 
     def _handler_s3_sync(self, payload):
         logger.info("calling s3_sync service..")
