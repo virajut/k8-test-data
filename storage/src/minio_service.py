@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from storage.src.minio_adapter import MinioAdapter
+from .minio_adapter import MinioAdapter
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -17,3 +17,4 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 class MinioService(MinioAdapter):
     def __init__(self, endpoint, access_key, secret_key, secure=False, *args, **kwargs):
         super().__init__(endpoint, access_key, secret_key, secure, *args, **kwargs)
+

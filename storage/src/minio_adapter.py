@@ -2,7 +2,7 @@ import logging
 
 from minio import Minio, ResponseError
 
-from storage.src.base_adapter import BaseStorageAdapter
+from .base_adapter import BaseStorageAdapter
 
 logger = logging.getLogger()
 

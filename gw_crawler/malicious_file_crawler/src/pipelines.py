@@ -3,13 +3,17 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 # useful for handling different item types with a single interface
+import json
 import logging
 import os
 import hashlib
 import mimetypes
+
+import requests
 from scrapy.pipelines.files import FilesPipeline
 from scrapy.utils.misc import md5sum
 from six import BytesIO
+
 
 from .constants import DOWNLOAD_PATH
 
@@ -52,7 +56,8 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
                 else:
                     bucket_name = 'hash'
                 minio_path = path.split("/")[-1]
-                MaliciousFileCrawlerPipeline.store(bucket_name, minio_path, downloaded_file_path)
+                print("kkhhj")
+                self.store_data(bucket_name, minio_path, downloaded_file_path)
 
                 return checksum
 
@@ -86,15 +91,16 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
                 media_ext = mimetypes.guess_extension(media_type)
         return 'full/%s%s' % (media_guid, media_ext)
 
-    @staticmethod
-    def store(bucket_name, minio_path, bundle_zip):
+
+    def store_data(self,bucket_name, minio_path, bundle_zip):
         """
             Create bucket
             Store object in minio
         """
         try:
-            client = MinioClient.get_client()
-            client.upload_file(bucket_name, minio_path, bundle_zip)
+            MinioClient.upload_file(bucket_name=bucket_name, minio_path=minio_path, file=bundle_zip)
         except Exception as e:
             logger.error(f'BundleZip:store:Error while processing file {e}')
             raise e
+
+
