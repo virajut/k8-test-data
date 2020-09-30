@@ -1,0 +1,45 @@
+import os
+
+
+def get_envar(k, required=True):
+    val = os.environ.get(k, None)
+    if not val and required:
+        exit(f"{k} not supplied")
+    return val
+
+
+class Config(object):
+    DEBUG = True
+
+    MINIO_ENDPOINT = get_envar("MINIO_ENDPOINT", required=True)
+    MINIO_ACCESS_KEY_ID = get_envar("MINIO_ACCESS_KEY_ID", required=True)
+    MINIO_SECRET_ACCESS_KEY = get_envar("MINIO_SECRET_ACCESS_KEY", required=True)
+    MINIO_SECURE = get_envar("MINIO_SECURE", required=False)
+    MINIO_BUCKET = get_envar("MINIO_BUCKET", required=True)
+
+    MQ_USERNAME = get_envar("MQ_USERNAME", required=True)
+    MQ_PASSWORD = get_envar("MQ_PASSWORD", required=True)
+    MQ_HOST = get_envar("MQ_HOST", required=True)
+    MQ_PORT = get_envar("MQ_PORT", required=True) 
+    MQ_CONNECTION_ATTEMPTS = get_envar("MQ_CONNECTION_ATTEMPTS", required=False)
+    MQ_HEART_BEAT = get_envar("MQ_HEART_BEAT", required=False)
+    MQ_EXCHANGE = get_envar("MQ_EXCHANGE", required=True)
+    MQ_EXCHANGE_TYPE = get_envar("MQ_EXCHANGE_TYPE", required=True)
+    MQ_QUEUE = get_envar("MQ_QUEUE", required=True)
+    MQ_ROUTING_KEY = get_envar("MQ_ROUTING_KEY", required=True)
+    MQ_PROTO = get_envar("MQ_PROTO", required=False)
+    MQ_VHOST = get_envar("MQ_VHOST", required=False)
+    MQ_PUBLISH_INTERVAL = get_envar("MQ_PUBLISH_INTERVAL", required=False)
+
+    MQ_URL = (
+        MQ_PROTO
+        + MQ_USERNAME
+        + ":"
+        + MQ_PASSWORD
+        + "@"
+        + MQ_HOST
+        + ":"
+        + MQ_PORT
+        + "/"
+        + MQ_VHOST
+    )
