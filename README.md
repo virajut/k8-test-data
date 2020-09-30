@@ -19,19 +19,24 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
 **Process Flow & Architecture**
   For each type of work, kubernetes (K8)  PODs of that type will be created. The orchestration of "POD type" clusters through Event driven architecture will complete  the process flow. 
   - **K8 - Scrapper Pod **
-     ![Scrapper flow](../img/k8-test-data_v1.4_scrapper.png)
+  
+     ![Scrapper flow](./img/k8-test-data_v1.4_scrapper.png)
      - The original zip file will be downloaded by scrapper along with metadata.
      - Persist the scrap log in cloud.
      - Base scrapper should have batch scrapping functionality.
      - Push the downloaded zip file to MinIO  service with GUID as filename of the zip file.
+     
    - **K8 MinIO Storage Pod **
-   ![MinIO storage POD](../img/k8-test-data_v1.4_MinIO_storage.png)
+   
+   ![MinIO storage POD](./img/k8-test-data_v1.4_MinIO_storage.png)
      - The original zip file gets downloaded and metadata collected like URL, date created etc.
      - Communicates with MinIO docker and stores the file.
-     -  - Put the Job in Rabbit MQ via MQ handler POD with GUID as filename for file processing by K8-core POD..
+     - Put the Job in Rabbit MQ via MQ handler POD with GUID as filename for file processing by K8-core POD..
      - Put the S3 synchronization job in MQ. 
+     
   - **K8 core POD**
-  ![enter image description here](../img/k8-test-data_v1.4_core.png)
+  
+  ![enter image description here](./img/k8-test-data_v1.4_core.png)
      - On arrival in MQ, download the original zip file from Minio. Unzip it.
      - Create a folder, with name as **GUID or hash**.
      - Do malicious check from virustotal. (will be handled through K8 POD type 2.1 )
@@ -40,9 +45,12 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
      - Download GW icap xml report and rebuild file
      - Make a zip of the folder with same name as folder name.
      - Put the Job in Rabbit MQ with GUID as filename.
+     
   -**MinIO - S3 Synchronization POD**
-  ![MinIO S3 Synch](../img/k8-test-data_v1.4_MinIO-S3%20synch.png)
+  
+  ![MinIO S3 Synch](./img/k8-test-data_v1.4_MinIO-S3%20synch.png)
      - Non K-8 activities or create another K8 POD. This will long running as the queue will built up.
+     
   - **K8 File Distribution POD**
      - This Kubernetics POD will host distribution API, which will cater to all the client requests to provide the file from Minio service. 
   
