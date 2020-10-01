@@ -22,14 +22,27 @@ class Config(object):
     MQ_HOST = get_envar("MQ_HOST", required=True)
     MQ_PORT = get_envar("MQ_PORT", required=True) 
     MQ_CONNECTION_ATTEMPTS = get_envar("MQ_CONNECTION_ATTEMPTS", required=False)
+    
     MQ_HEART_BEAT = get_envar("MQ_HEART_BEAT", required=False)
+    if MQ_HEART_BEAT is None:
+        MQ_HEART_BEAT = 300
+
     MQ_EXCHANGE = get_envar("MQ_EXCHANGE", required=True)
     MQ_EXCHANGE_TYPE = get_envar("MQ_EXCHANGE_TYPE", required=True)
     MQ_QUEUE = get_envar("MQ_QUEUE", required=True)
     MQ_ROUTING_KEY = get_envar("MQ_ROUTING_KEY", required=True)
+    
     MQ_PROTO = get_envar("MQ_PROTO", required=False)
+    if MQ_PROTO is None:
+        MQ_PROTO = 'amqp://'
+
     MQ_VHOST = get_envar("MQ_VHOST", required=False)
+    if MQ_VHOST is None:
+        MQ_VHOST = '%2f'
+
     MQ_PUBLISH_INTERVAL = get_envar("MQ_PUBLISH_INTERVAL", required=False)
+    if MQ_PUBLISH_INTERVAL is None:
+        MQ_PUBLISH_INTERVAL = 5
 
     MQ_URL = (
         MQ_PROTO
@@ -42,4 +55,8 @@ class Config(object):
         + MQ_PORT
         + "/"
         + MQ_VHOST
+        + "?connection_attempts="
+        + MQ_CONNECTION_ATTEMPTS
+        + "&heartbeat="
+        + MQ_HEART_BEAT
     )

@@ -11,7 +11,7 @@ import pika
 from src.config import Config
 
 
-LOGGER = logging.getLogger('GW: RabbitClient')
+LOGGER = logging.getLogger('GW: RabbitMQ Publisher')
 
 
 class RabbitClient(object):
@@ -23,7 +23,7 @@ class RabbitClient(object):
     ROUTING_KEY = Config.MQ_ROUTING_KEY
     MQ_URL = Config.MQ_URL
 
-    def __init__(self, amqp_url):
+    def __init__(self):
         
         self._connection = None
         self._channel = None
@@ -37,12 +37,16 @@ class RabbitClient(object):
         self._url = self.MQ_URL
 
     def connect(self):
-        LOGGER.info('Connecting to %s', self._url)
-        return pika.SelectConnection(
-            pika.URLParameters(self._url),
-            on_open_callback=self.on_connection_open,
-            on_open_error_callback=self.on_connection_open_error,
-            on_close_callback=self.on_connection_closed)
+        try:
+            LOGGER.info('Connecting to %s', self._url)
+            return pika.SelectConnection(
+                pika.URLParameters(self._url),
+                on_open_callback=self.on_connection_open,
+                on_open_error_callback=self.on_connection_open_error,
+                on_close_callback=self.on_connection_closed)
+        except Exception as err:
+            LOGGER.error(str(err))
+            raise Exception("Unable to establish connection with RabbitMQ")
 
     
     def on_connection_open(self, _unused_connection):
@@ -144,46 +148,34 @@ class RabbitClient(object):
 
     def publish_message(self, headers={}, message=None):
         
-        if self._channel is None or not self._channel.is_open:
-            return
+        try:
+            if self._channel is None or not self._channel.is_open:
+                return
 
-        if headers is not None:
-            properties = pika.BasicProperties(
-                content_type='application/json',
-                headers=headers)
-        else:
-            properties = pika.BasicProperties(
-                content_type='application/json'
+            if headers is not None:
+                properties = pika.BasicProperties(
+                    content_type='application/json',
+                    headers=headers
+                )
+            else:
+                properties = pika.BasicProperties(
+                    content_type='application/json'
                 )
 
-        message = u'{0}'.format(message)
-        self._channel.basic_publish(self.EXCHANGE, self.ROUTING_KEY,
-                                    json.dumps(message, ensure_ascii=False),
-                                    properties)
+            message = u'{0}'.format(message)
+            self._channel.basic_publish(self.EXCHANGE, self.ROUTING_KEY,
+                                        json.dumps(message, ensure_ascii=False),
+                                        properties)
 
-        self._message_number += 1
-        self._deliveries.append(self._message_number)
-        LOGGER.info('Published message # %i', self._message_number)
-        self.schedule_next_message()
-
-    def run(self):
-        while not self._stopping:
-            self._connection = None
-            self._deliveries = []
-            self._acked = 0
-            self._nacked = 0
-            self._message_number = 0
-
-            try:
-                self._connection = self.connect()
-                self._connection.ioloop.start()
-            except KeyboardInterrupt:
-                self.stop()
-                if (self._connection is not None and
-                        not self._connection.is_closed):
-                    # Finish closing
-                    self._connection.ioloop.start()
-        LOGGER.info('Stopped')
+            self._message_number += 1
+            self._deliveries.append(self._message_number)
+            LOGGER.info('Published message # %i', self._message_number)
+            self.schedule_next_message()
+        except Exception as err:
+            LOGGER.error("Something went wrong while pusblishing message to the remote Queue.")
+            LOGGER.error(str(err))
+            raise Exception("Something went wrong while pusblishing message to the remote Queue.")
+        
 
     def stop(self):
         LOGGER.info('Stopping')

@@ -6,7 +6,7 @@ from rabbit_client import RabbitClient
 
 from src.config import Config as AppConfig
 
-logger = logging.getLogger("GW: RabbitMQ QUEUE")
+logger = logging.getLogger("GW: RabbitMQ Publisher")
 
 
 class MinioClient(object):

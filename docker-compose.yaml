@@ -82,6 +82,17 @@ services:
       - 5003:5001
     links:
       - minio
+    
+  rabbitmq-publisher:
+    image: rabbitmq-publisher
+    build:
+      context: .
+      dockerfile: rabbitmq_publisher/Dockerfile
+    env_file: 
+      - rabbitmq_publisher/.env
+    depends_on: 
+      - minio
+      - rabbitmq
 
 volumes:
   data1-1: 
