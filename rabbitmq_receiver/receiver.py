@@ -23,7 +23,7 @@ class Consumer:
     def _handler_s3_sync(self, payload):
         logger.info("calling s3_sync service..")
 
-    def on_message_receive(self, ch, method, properties, body):
+    def on_message_receive(ch, method, properties, body):
         logger.info(" [x] Received ")
         msg = body.decode()
         logger.info(msg)

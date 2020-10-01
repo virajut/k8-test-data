@@ -1,7 +1,0 @@
-Flask==1.1.2
-requests==2.23.0
-boto3==1.13.7
-bs4==0.0.1
-selenium==3.141
-minio==6.0.0
-
