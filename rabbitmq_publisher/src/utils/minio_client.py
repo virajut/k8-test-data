@@ -2,9 +2,8 @@ import os
 import logging
 
 from minio import Minio, ResponseError
-from rabbit_client import RabbitClient
 
-from src.config import Config as AppConfig
+from src.config import Config
 
 logger = logging.getLogger("GW: RabbitMQ Publisher")
 
@@ -13,10 +12,10 @@ class MinioClient(object):
 
     def __init__(self):
         try:
-            self.minio = Minio(endpoint=AppConfig.MINIO_ENDPOINT,
-                               access_key=AppConfig.MINIO_ACCESS_KEY_ID,
-                               secret_key=AppConfig.MINIO_SECRET_ACCESS_KEY,
-                               secure=AppConfig.MINIO_SECURE)      
+            self.minio = Minio(endpoint=Config.MINIO_ENDPOINT,
+                               access_key=Config.MINIO_ACCESS_KEY_ID,
+                               secret_key=Config.MINIO_SECRET_ACCESS_KEY,
+                               secure=bool(Config.MINIO_SECURE))      
             logger.info("Connected to Minio Server")
         except KeyError as err:
             logger.error(err)

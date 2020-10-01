@@ -90,7 +90,7 @@ services:
       dockerfile: rabbitmq_publisher/Dockerfile
     env_file: 
       - rabbitmq_publisher/.env
-    depends_on: 
+    links: 
       - minio
       - rabbitmq
 
