@@ -75,6 +75,8 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 `docker build -t glasswall-rebuild  glasswall_rebuild`
 
+`docker build -t k8-s3-sync  s3_sync`
+
 
 ### Run
 

@@ -20,3 +20,6 @@ class Config(object):
     MINIO_SECRET_KEY = get_envar("MINIO_SECRET_KEY")
     virustotal_url = get_envar("virustotal_url")
     virustotal_key = get_envar("virustotal_key")
+
+    MQ_HOST = get_envar("MQ_HOST")
+    MQ_QUEUE = get_envar("MQ_QUEUE")
