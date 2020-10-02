@@ -30,8 +30,6 @@ services:
       dockerfile: storage/Dockerfile
     env_file:
       - storage/.env
-    volumes:
-      - app-volume
     ports:
       - 50052:50052
       - 5005:5002
