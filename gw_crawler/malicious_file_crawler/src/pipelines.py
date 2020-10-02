@@ -28,6 +28,7 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
     def __init__(self, *a, **kw):
         super(MaliciousFileCrawlerPipeline, self).__init__(*a, **kw)
         self.extension = None
+        self.hash_api_url = None
 
     def file_downloaded(self, response, request, info, unzip_path=None):
         """
@@ -54,7 +55,7 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
                 file_stat = os.stat(downloaded_file_path)
 
                 self.store_data_stream(bucket_name=bucket_name, minio_path=minio_path, data=response.body,
-                                  length=file_stat.st_size)
+                                       length=file_stat.st_size)
 
                 return checksum
 
@@ -66,15 +67,23 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
         try:
             urls = ItemAdapter(item).get(self.files_urls_field, [])
             ext = ItemAdapter(item).get('extension', [])
+            self.hash_api_url = ItemAdapter(item).get('hash_api_url', [])
             if (ext):
                 self.extension = "." + ext[0]
+
             return [Request(u) for u in urls]
         except Exception as error:
             logger.error(f'MaliciousFileCrawlerPipeline : get_media_requests : {error}')
             raise error
 
     def file_path(self, request, response=None, info=None):
-        media_guid = hashlib.sha1(to_bytes(request.url)).hexdigest()
+
+        if (self.hash_api_url):
+            hash_url = self.hash_api_url[0]
+        else:
+            hash_url = request.url[0]
+
+        media_guid = hashlib.sha1(to_bytes(hash_url)).hexdigest()
         media_ext = os.path.splitext(request.url)[1]
         # Handles empty and wild extensions by trying to guess the
         # mime type then extension or default to empty string otherwise

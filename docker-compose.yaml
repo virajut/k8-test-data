@@ -23,6 +23,19 @@ services:
       - 5672:5672
       - 15672:15672
 
+  storage-adapter:
+    image: storage:1.0
+    build:
+      context: .
+      dockerfile: storage/Dockerfile
+    env_file:
+      - storage/.env
+    volumes:
+      - app-volume
+    ports:
+      - 50052:50052
+      - 5005:5002
+
   rabbitmq-receiver:
     image: rabbitmq-receiver
     build:
@@ -32,7 +45,7 @@ services:
       - rabbitmq_receiver/.env
     depends_on:
       - rabbitmq
-      
+
   glasswall-crawler:
     image: glasswallcrawler:1.0
     build:
@@ -97,7 +110,7 @@ services:
       - minio
     depends_on:
       - minio
-    
+
 volumes:
   data1-1: 
   
