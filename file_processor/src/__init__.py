@@ -18,6 +18,7 @@ logger.basicConfig(level=logger.INFO)
 class Processor:
     def __init__(self, filename):
         self.filename = filename
+        self.ext = None
         self.directory = None
         self.path = None
         self.infected_path = None
@@ -35,19 +36,20 @@ class Processor:
 
     def download_and_unzip(self):
         logger.info(f"downloading file {self.filename} from minio")
-        ext = self.filename.split(".")[-1]
-        download_path = self.directory if ext == "zip" else self.infected_path
-        self.minio.download_files(ext, self.filename, download_path)
+        self.ext = self.filename.split(".")[-1]
+        download_path = self.directory if self.ext == "zip" else self.infected_path
+        self.minio.download_files(self.ext, self.filename, download_path)
 
-        if ext == "zip":
+        if self.ext == "zip":
             FileService.unzip(self.path, self.infected_path)
-            file = os.listdir()
+            file = os.listdir(self.infected_path)
             if not file:
                 logger.error("no file inside zip")
             self.infected_file = file[0]
 
     def check_virustotal(self):
         logger.info("checking malicious with VirusTotal")
+        # print(self.infected_path + "/" + self.infected_file)
         resp = self.vt.file_scan(self.infected_path + "/" + self.infected_file)
         # resp = "{'test':'1'}"
         with open(self.directory + "/virustotal.json", "w") as fp:
@@ -57,7 +59,7 @@ class Processor:
         logger.info("rebuilding with GW engine")
         file = GlasswallService.rebuild(self.infected_file, self.infected_path)
         if file:
-            with open(self.directory + f"/rebuild_{self.filename}", "wb") as fp:
+            with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
                 fp.write(file)
 
     def prepare_result(self):
@@ -75,7 +77,13 @@ class Processor:
 
     def send_mq(self):
         logger.info("sending file to rabbitmq for s3 sync")
-        MQService.send({})
+        name = self.directory.split("/")[-1]
+        payload = {
+            's3_bucket': self.ext,
+            'minio_bucket': "processed",
+            'file': name + ".zip"
+        }
+        MQService.send(payload)
 
     def process(self):
         logger.info(f"processing {self.filename}")

@@ -22,6 +22,7 @@ class Consumer:
 
     def _handler_s3_sync(self, payload):
         logger.info("calling s3_sync service..")
+        requests.post("http://k8-s3-sync:5004/tos3", json=payload)
 
     def on_message_receive(ch, method, properties, body):
         logger.info(" [x] Received ")

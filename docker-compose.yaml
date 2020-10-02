@@ -83,17 +83,19 @@ services:
       dockerfile: glasswall_rebuild/Dockerfile
     ports:
       - 5003:5003
-  
-  to_s3:
-    image: to-s3
+
+  k8-s3-sync:
+    image: k8-s3-sync
+    env_file:
+      - s3_sync/.env
     build:
       context: .
-      dockerfile: to_s3/Dockerfile
-    env_file:
-      - to_s3/.env
+      dockerfile: s3-sync/Dockerfile
     ports:
-      - 5003:5001
+      - 5004:5004
     links:
+      - minio
+    depends_on:
       - minio
     
   rabbitmq-publisher:

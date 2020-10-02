@@ -12,30 +12,47 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
   - The file types should cover all supported file types by Glasswall (Refer https://glasswallsolutions.com/technology/ or https://file-drop.co.uk/ )
   - Sample files can be sourced from Glasswall public files(https://engineering.glasswallsolutions.com/docs/products/cloud-sdk/sample-files/ , https://github.com/filetrust/GW-Test-Files , )
   - Glasswall private files (https://github.com/filetrust/malicious-test-files  , https://github.com/filetrust/sdk-eval-toolset/tree/master/test  and  https://console.aws.amazon.com/s3/buckets/jp-testbucket-1/?region=eu-west-2) 
+  - Dynamic generation of files , based on programmatically modifications of content, structure and capabilities.
 
 - The final objective is to be able to to support - 4 Million files with an average file size of 10 Mbs. However at start we will start with Github repo. 
 
-**Process Flow:**
-  For each type of work, kubernetes (K8)  PODs of that type will be created. The orchestration of "POD type" clusters through Event driven architecture will complete  will be complete the process flow. 
-  - K8 Pod type 1
+**Process Flow & Architecture**
+  For each type of work, kubernetes (K8)  PODs of that type will be created. The orchestration of "POD type" clusters through Event driven architecture will complete  the process flow. 
+  - **K8 - Scrapper Pod **
+  
+     ![Scrapper flow](./img/k8-test-data_v1.4_scrapper.png)
      - The original zip file will be downloaded by scrapper along with metadata.
      - Persist the scrap log in cloud.
      - Base scrapper should have batch scrapping functionality.
-     - Put the Job in Rabbit MQ (Other option can be KubeMQ) with GUID as filename of the zip file.
-  - K8 Pod type 2
+     - Push the downloaded zip file to MinIO  service with GUID as filename of the zip file.
+     
+   - **K8 MinIO Storage Pod **
+   
+   ![MinIO storage POD](./img/k8-test-data_v1.4_MinIO_storage.png)
+     - The original zip file gets downloaded and metadata collected like URL, date created etc.
+     - Communicates with MinIO docker and stores the file.
+     - Put the Job in Rabbit MQ via MQ handler POD with GUID as filename for file processing by K8-core POD..
+     - Put the S3 synchronization job in MQ. 
+     
+  - **K8 core POD**
+  
+  ![enter image description here](./img/k8-test-data_v1.4_core.png)
      - On arrival in MQ, download the original zip file from Minio. Unzip it.
-     - Create a folder, with name as GUID or hash.
+     - Create a folder, with name as **GUID or hash**.
      - Do malicious check from virustotal. (will be handled through K8 POD type 2.1 )
-     - Send the file to Glasswall Icap rebuild service. (will be handled through K8 POD type 2.2 )
+     - Send the file to Glasswall Icap rebuild service. (should be in  K8 POD )
      - Download the virustotal report.
      - Download GW icap xml report and rebuild file
      - Make a zip of the folder with same name as folder name.
      - Put the Job in Rabbit MQ with GUID as filename.
-  - Minio - S3 Synchronization.
+     
+  -**MinIO - S3 Synchronization POD**
+  
+  ![MinIO S3 Synch](./img/k8-test-data_v1.4_MinIO-S3%20synch.png)
      - Non K-8 activities or create another K8 POD. This will long running as the queue will built up.
-  - K8 Pod type 3
+     
+  - **K8 File Distribution POD**
      - This Kubernetics POD will host distribution API, which will cater to all the client requests to provide the file from Minio service. 
-  - Dynamic generation of files , based on programmatically modifications of content, structure and capabilities.
   
 Malware Public Repositories ( Proceed with caution when handling live malware) :
 
@@ -74,6 +91,8 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 `docker build -t k8-file-distribution file_distribution`
 
 `docker build -t glasswall-rebuild  glasswall_rebuild`
+
+`docker build -t k8-s3-sync  s3_sync`
 
 
 ### Run
