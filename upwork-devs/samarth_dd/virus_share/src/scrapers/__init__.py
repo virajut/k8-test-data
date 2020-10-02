@@ -1,1 +1,0 @@
-from scrapers.virusshare import Scraper
