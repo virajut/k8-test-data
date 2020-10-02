@@ -1,4 +1,4 @@
-## Run scraper in local machine
+#GW Crawler
 
 ## Scraper Sites 
 
@@ -25,13 +25,15 @@
 
 ###Update .env 
 
-    create virusshare api key from https://virusshare.com/apiv2_reference , 
+    Create virusshare api key from https://virusshare.com/apiv2_reference , 
     
-    create malshare api key from https://malshare.com/doc.php,
+    Create malshare api key from https://malshare.com/doc.php,
     
-    update .env (see .env_sample)
+    Update .env (see .env_sample)
     
-### Run scrapper in Docker
+
+### Usage
+
 ```
     docker build -t glasswallcrawler:1.0 .
      
