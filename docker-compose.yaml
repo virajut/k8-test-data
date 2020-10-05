@@ -108,7 +108,18 @@ services:
       - minio
     depends_on:
       - minio
-
+    
+  rabbitmq-publisher:
+    image: rabbitmq-publisher
+    build:
+      context: .
+      dockerfile: rabbitmq_publisher/Dockerfile
+    env_file: 
+      - rabbitmq_publisher/.env
+    links: 
+      - minio
+      - rabbitmq
+  
 volumes:
   data1-1: 
   
