@@ -16,27 +16,32 @@ If you are working on this project via Upwork, see also our [Upwork Rules of Eng
 
 - The final objective is to be able to to support - 4 Million files with an average file size of 10 Mbs. However at start we will start with Github repo. 
 
-**Process Flow & Architecture**
-  For each type of work, kubernetes (K8)  PODs of that type will be created. The orchestration of "POD type" clusters through Event driven architecture will complete  the process flow. 
-  - **K8 - Scrapper Pod **
+**Process Flow & Architecture**  
+  - For each type of work, kubernetes (K8)  PODs of that type will be created. The orchestration of "POD type" clusters through Event driven architecture will complete  the process flow.
+  - All the kubernetes resources respective to this project will be created under a namespace called "***k8-test-data***" to isolate from other project deployments.
+
+
+  - **K8 - Scrapper Pod**
   
      ![Scrapper flow](./img/k8-test-data_v1.4_scrapper.png)
      - The original zip file will be downloaded by scrapper along with metadata.
      - Persist the scrap log in cloud.
      - Base scrapper should have batch scrapping functionality.
      - Push the downloaded zip file to MinIO  service with GUID as filename of the zip file.
+     - This module can be deployed as a CronJob (batch process) resource in Kubernetes cluster, which can be scheduled to do crawling job at specific timings. (**TBC**: whether to deploy as a Service to be scheduled externally.)
      
-   - **K8 MinIO Storage Pod **
+  - **K8 MinIO Storage Pod**
    
-   ![MinIO storage POD](./img/k8-test-data_v1.4_MinIO_storage.png)
+      ![MinIO storage POD](./img/k8-test-data_v1.4_MinIO_storage.png)
      - The original zip file gets downloaded and metadata collected like URL, date created etc.
      - Communicates with MinIO docker and stores the file.
      - Put the Job in Rabbit MQ via MQ handler POD with GUID as filename for file processing by K8-core POD..
-     - Put the S3 synchronization job in MQ. 
+     - Put the S3 synchronization job in MQ.
+     - Minio and rabbitmq can be deplyoed under a common namespace (say ***k8-common***) that can even be used by every other projects within Glasswall.
      
   - **K8 core POD**
   
-  ![enter image description here](./img/k8-test-data_v1.4_core.png)
+      ![enter image description here](./img/k8-test-data_v1.4_core.png)
      - On arrival in MQ, download the original zip file from Minio. Unzip it.
      - Create a folder, with name as **GUID or hash**.
      - Do malicious check from virustotal. (will be handled through K8 POD type 2.1 )
