@@ -1,8 +1,7 @@
-import os
-from flask import Flask, request, jsonify, send_file
 import logging as logger
+import os
 from pathlib import Path
-
+from flask import Flask, request, jsonify
 from src.config import Config
 from src.services import (
     MinioService,
@@ -55,6 +54,14 @@ class Processor:
         with open(self.directory + "/virustotal.json", "w") as fp:
             fp.write(str(resp))
 
+    def get_metadata(self):
+        logger.info("getting metadata of the file")
+        self.metadata = FileService.get_file_meta(self.infected_path + "/" + self.infected_file)
+        meta = self.metadata
+
+        with open(self.directory + "/"+ meta['hash']+ ".json", "w") as fp:
+            fp.write(str(meta))
+
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
         file = GlasswallService.rebuild(self.infected_file, self.infected_path)
@@ -93,6 +100,7 @@ class Processor:
             (self.download_and_unzip, (ValueError, TypeError)),
             (self.check_virustotal, default_exceptions),
             (self.rebuild_glasswall, default_exceptions),
+            (self.get_metadata, default_exceptions),
             (self.prepare_result, default_exceptions),
             (self.upload, default_exceptions),
             (self.send_mq, default_exceptions),

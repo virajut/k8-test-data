@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from storage.src.minio_adapter import MinioAdapter
+from .minio_adapter import MinioAdapter
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 

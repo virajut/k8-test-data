@@ -11,3 +11,4 @@ class MaliciousFileCrawlerItem(scrapy.Item):
     file_urls = scrapy.Field()
     extension = scrapy.Field()
     files = scrapy.Field()
+    hash_api_url=scrapy.Field()

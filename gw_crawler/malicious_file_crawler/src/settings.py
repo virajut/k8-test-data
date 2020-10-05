@@ -12,28 +12,26 @@ from src.constants import DOWNLOAD_PATH
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 from dotenv import load_dotenv
-
 env_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
 PROJECT_NAME = 'malicious_file_crawler'
 # Define JOBDIR path for pausing and resuming crawls
-JOB_DIR = 'crawls/spiders'
-# scrapyd endpoint
-# SCRAPYD_ENDPOINT = 'http://localhost:6800'
+#JOB_DIR = 'crawlers/spider-1'
 
-# EXTENSIONS = {
-#    'scrapy_dotpersistence.DotScrapyPersistence': 0,
-# }
+from datetime import datetime
+HTTPCACHE_ENABLED = True
+HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+date = datetime.strftime(datetime.now(), '%Y%m%d')
 
-# DOTSCRAPY_ENABLED = True
-#
-# ADDONS_AWS_ACCESS_KEY_ID ='AWS ACCESS KEY'
-# ADDONS_AWS_SECRET_ACCESS_KEY ="AWS SECRET KEY"
-# # ADDONS_AWS_USERNAME = "username"
-# ADDONS_S3_BUCKET = "BUCKET NAME"
+HTTPCACHE_EXPIRATION_SECS = 60 * 60 * 24 * 7
+HTTPCACHE_DIR = 'httpcache'
+
+EXTENSIONS = {
+   'scrapy_dotpersistence.DotScrapyPersistence': 0,
+}
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 # Get the path to the directory this file is in
 CURR_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -66,21 +64,6 @@ REACTOR_THREADPOOL_MAXSIZE = 20
 # Disable cookies (enabled by default)
 # COOKIES_ENABLED = False
 
-# Disable Telnet Console (enabled by default)
-# TELNETCONSOLE_ENABLED = False
-
-# Override the default request headers:
-# DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-# }
-
-# Enable or disable spider middlewares
-# See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-# SPIDER_MIDDLEWARES = {
-#    'src.middlewares.MaliciousFileCrawlerSpiderMiddleware': 543,
-# }
-
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
@@ -89,15 +72,10 @@ DOWNLOADER_MIDDLEWARES = {
 
 }
 
-# Enable or disable extensions
-# See https://docs.scrapy.org/en/latest/topics/extensions.html
-
-
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     "src.pipelines.MaliciousFileCrawlerPipeline": 300,
-
 }
 
 DOWNLOAD_TIMEOUT = 12000
@@ -108,23 +86,3 @@ FILES_STORE = DOWNLOAD_PATH
 # Uncomment this when MINIO service is running
 # max download size of 5gb
 DOWNLOAD_MAXSIZE = 5368709120
-# Enable and configure the AutoThrottle extension (disabled by default)
-# See https://docs.scrapy.org/en/latest/topics/autothrottle.html
-# AUTOTHROTTLE_ENABLED = True
-# The initial download delay
-# AUTOTHROTTLE_START_DELAY = 5
-# The maximum download delay to be set in case of high latencies
-# AUTOTHROTTLE_MAX_DELAY = 60
-# The average number of requests Scrapy should be sending in parallel to
-# each remote server
-# AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
-# Enable showing throttling stats for every response received:
-# AUTOTHROTTLE_DEBUG = False
-
-# Enable and configure HTTP caching (disabled by default)
-# See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
-# HTTPCACHE_ENABLED = True
-# HTTPCACHE_EXPIRATION_SECS = 0
-# HTTPCACHE_DIR = 'httpcache'
-# HTTPCACHE_IGNORE_HTTP_CODES = []
-# HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'

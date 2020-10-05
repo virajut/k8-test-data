@@ -1,14 +1,15 @@
+import json as j
 import logging
 import os
 import sys
+
+import requests
 
 sys.path.append(os.path.dirname(
     os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     ))
 )
-
-from storage.src.minio_service import MinioService
 
 logger = logging.getLogger("GW:minio")
 
@@ -17,19 +18,23 @@ class MinioClient:
     """
             It calls storage adapter to get minio client
     """
+    server_base_url = os.environ["storage_adapter_url"]
 
     @staticmethod
-    def get_client():
+    def upload_file(bucket_name, minio_path, file, server_base_url=server_base_url):
         try:
-            # client = MinioService.get_storage_adapter()
-            endpoint = os.environ["MINIO_URL"]
-            access_key = os.environ["MINIO_ACCESS_KEY"]
-            secret_key = os.environ["MINIO_SECRET_KEY"]
-            secure = False
-            client = MinioService(endpoint, access_key, secret_key, secure)
+            data = {'bucket_name': bucket_name,
+                    "minio_path": minio_path,
+                    "file": file, }
+            return requests.post(server_base_url + "upload", json=data)
+        except Exception as e:
+            logger.error(f'MinioClient : upload_file : {e} ')
 
-        except Exception:
-            logger.error('MinioClient:get_client: Error while gettng client')
-            raise Exception("client not found")
-        else:
-            return client
+    @staticmethod
+    def upload_stream(bucket_name, name, data,length,server_base_url=server_base_url):
+        try:
+            params = {'bucket_name': bucket_name,'name': name,'length': length,}
+            return requests.post(server_base_url + "upload_stream", data=data,params=params)
+        except Exception as e:
+            logger.error(f'MinioClient : upload_stream : {e} ')
+

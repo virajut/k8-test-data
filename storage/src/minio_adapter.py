@@ -2,7 +2,7 @@ import logging
 
 from minio import Minio, ResponseError
 
-from storage.src.base_adapter import BaseStorageAdapter
+from .base_adapter import BaseStorageAdapter
 
 logger = logging.getLogger()
 
@@ -66,13 +66,14 @@ class MinioAdapter(BaseStorageAdapter):
             self.logger.error(e)
             raise Exception(e)
 
-    def upload_data_stream(self, bucket_name, file_name, data_stream, data_type):
-        length = len(data_stream)
+    def upload_data_stream(self, bucket_name, file_name, data_stream, length):
+
         if (not self._client.bucket_exists(bucket_name)):
             self._client.make_bucket(bucket_name=bucket_name)
+
         try:
-            self._client.put_object(bucket_name=bucket_name, object_name=file_name, data=data_stream, length=length,
-                                    content_type=type)
+
+            self._client.put_object(bucket_name=bucket_name, object_name=file_name, data=data_stream, length=length)
         except ResponseError as err:
             self.logger.error(err)
             raise err
