@@ -1,4 +1,5 @@
 import os
+import pathlib
 from os.path import basename
 import zipfile
 from src.services import MinioService
@@ -25,3 +26,30 @@ class FileService:
                     filePath = os.path.join(folderName, filename)
                     zipObj.write(filePath, basename(filePath))
         return zip_filename
+
+    @staticmethod
+    def get_file_meta(file_path):
+        """
+            get_file_meta :extract file name and file type
+            size, extension, name , hash
+        """
+        # initializing empty meta dict
+        meta = {}
+
+        try:
+            file_stat = os.stat(file_path)
+            size = file_stat.st_size
+            suffix = pathlib.Path(file_path).suffix
+            extension = suffix.split(".")[-1]
+
+            meta['size']= str(file_stat.st_size) +  " bytes"
+            meta["name"] = file_path.split("/")[-1]
+            meta['hash']=file_path.split("/")[-1].split('.')[0]
+            if not extension:
+                meta["extension"] = 'txt'
+            else:
+                meta["extension"] = extension
+        except Exception as error:
+            raise error
+        else:
+            return meta

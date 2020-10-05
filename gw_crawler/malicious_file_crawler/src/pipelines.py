@@ -3,18 +3,17 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 # useful for handling different item types with a single interface
-import logging
-import os
 import hashlib
+import logging
 import mimetypes
+import os
+
 from scrapy.pipelines.files import FilesPipeline
 from scrapy.utils.misc import md5sum
+from scrapy.utils.python import to_bytes
 from six import BytesIO
 
 from .constants import DOWNLOAD_PATH
-
-from scrapy.utils.python import to_bytes
-
 from .utils.minio_client import MinioClient
 
 logger = logging.getLogger(__name__)
@@ -29,6 +28,7 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
     def __init__(self, *a, **kw):
         super(MaliciousFileCrawlerPipeline, self).__init__(*a, **kw)
         self.extension = None
+        self.hash_api_url = None
 
     def file_downloaded(self, response, request, info, unzip_path=None):
         """
@@ -45,14 +45,17 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
                 checksum = md5sum(buf)
                 buf.seek(0)
                 self.store.persist_file(path, buf, info)
-                downloaded_file_path = DOWNLOAD_PATH + "/" + path
-                extension=path.split("/")[-1].split('.')[-1]
+                downloaded_file_path = DOWNLOAD_PATH + path
+                extension = path.split("/")[-1].split('.')[-1]
                 if extension:
                     bucket_name = extension.lower()
                 else:
                     bucket_name = 'hash'
                 minio_path = path.split("/")[-1]
-                MaliciousFileCrawlerPipeline.store(bucket_name, minio_path, downloaded_file_path)
+                file_stat = os.stat(downloaded_file_path)
+
+                self.store_data_stream(bucket_name=bucket_name, minio_path=minio_path, data=response.body,
+                                       length=file_stat.st_size)
 
                 return checksum
 
@@ -64,15 +67,23 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
         try:
             urls = ItemAdapter(item).get(self.files_urls_field, [])
             ext = ItemAdapter(item).get('extension', [])
+            self.hash_api_url = ItemAdapter(item).get('hash_api_url', [])
             if (ext):
                 self.extension = "." + ext[0]
+
             return [Request(u) for u in urls]
         except Exception as error:
             logger.error(f'MaliciousFileCrawlerPipeline : get_media_requests : {error}')
             raise error
 
     def file_path(self, request, response=None, info=None):
-        media_guid = hashlib.sha1(to_bytes(request.url)).hexdigest()
+
+        if (self.hash_api_url):
+            hash_url = self.hash_api_url[0]
+        else:
+            hash_url = request.url[0]
+
+        media_guid = hashlib.sha1(to_bytes(hash_url)).hexdigest()
         media_ext = os.path.splitext(request.url)[1]
         # Handles empty and wild extensions by trying to guess the
         # mime type then extension or default to empty string otherwise
@@ -86,15 +97,13 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
                 media_ext = mimetypes.guess_extension(media_type)
         return 'full/%s%s' % (media_guid, media_ext)
 
-    @staticmethod
-    def store(bucket_name, minio_path, bundle_zip):
+    def store_data_stream(self, bucket_name, minio_path, data, length):
         """
             Create bucket
             Store object in minio
         """
         try:
-            client = MinioClient.get_client()
-            client.upload_file(bucket_name, minio_path, bundle_zip)
-        except Exception as e:
-            logger.error(f'BundleZip:store:Error while processing file {e}')
-            raise e
+            MinioClient.upload_stream(bucket_name=bucket_name, name=minio_path, data=data, length=length)
+        except Exception as error:
+            logger.error(f'BundleZip:store:Error while processing file {error}')
+            raise error

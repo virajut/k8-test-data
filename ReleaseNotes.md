@@ -25,8 +25,9 @@ Public malware reference - https://cyberlab.pacific.edu/resources/malware-sample
 
 Note :  http://contagiodump.blogspot.com/ in above public reference not implemented since it is paid service and password for malware zip is not availble
 
-
+# Release 0.1 
 ##Test Data Release notes
+
         Goal : Goal is to fetch malware files from various sites, store it in cloud and distribution of the same using api
 
         The code does web crawling of Das malverk site https://das-malwerk.herokuapp.com/ and fetches malicious zip 
@@ -44,6 +45,76 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
         Storing zip according to file type is yet to be done.
         
         Persisting transaction in mysql is yet to be completed.
+        
+#Release 0.2
+            
+            
+**All entities will be running in different pod and are independent of each other and communicate through endpoints.**
+
+        The entities are listed below
+
+        Gw Crawler , 
+        
+        Storage adapter ,
+        
+        File processing , 
+        
+        Rabbit MQ ,
+        
+        Dsitrubution api,
+        
+        s3 sync
+             
+**Web scraping for below sites has been completed**
+
+        VirusShare: https://virusshare.com/
+        
+        The Zoo: https://github.com/ytisf/theZoo/
+        
+        Malshare: https://malshare.com/
+        
+        Das Malwerk: http://dasmalwerk.eu/
+        
+        Tek Defecnce: http://www.tekdefense.com/
+        
+**Minio Storage**
+
+    GW_Crawler communicate with Storage adapter using api endpoint to call minio adapter.
+    
+    Stores malware files directly to minio.
+    
+    It will be stored in minio bucket where bucket name will be extension of files.
+    
+    The files will be renamed with global sha1 hashing before storing it to minio. ( Filename = hash + extension )
+  
+**File processing**
+
+    The files stored in minio will be downloaed in this pod.
+    
+    If it is zip file, it will be unzipped first and sent to next step of file processing.
+    
+    Metadata like name, extension , size and hash will be extracted and saved in a json file
+    
+    The file is sent to virus total scan and report is fetched and saved in a file
+    
+    The file is sent to GW icap rebuild and clean file will be downloaded
+    
+    Finally metadata json file, virus total report, GW icap cleaned file along with original malware is bungle zipped with hash of file as zipname.
+    
+    The bundle zip is stored in the minio pod with "processed" as bucket name
+    
+    Once bundle minio upload is done s3 sych will be triggered and queued through rabbitmq by  passing consumer minio and reciver s3 endpoints.
+    
+**s3 sync**
+
+    s3 synch will accept minio endpoint as consumer, s3 endpoint as target endpoint
+    
+    It downloads from minio and sync it to s3 storage.
+    
+**File Distribution API**
+
+    This api is responsible for dsitribution of the the above bundle zip on demand.
+
 
 
 
