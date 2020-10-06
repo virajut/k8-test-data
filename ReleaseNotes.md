@@ -94,6 +94,12 @@
 
         Configaration of ELK for logs and cache
 
+        Please put TODO to change this to selectConnection instead of BlockingConnection.
+
+        Exception code for GW rebuild API failure, should be there in Ashish code.
+
+        Testing for large amount of data and handling edge condition
+
 
 # Release 0.1 
 ## Date : 18/09/2020
