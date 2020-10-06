@@ -1,7 +1,10 @@
 #k8-test-data
 
-#Release 0.2   
-##Date : 6/10/2020
+
+# Release 0.2
+## Date : 6/10/2020
+
+
 [github commit link](https://github.com/k8-proxy/k8-test-data/commit/3f4aba41157cee1ef7f0167259da31af87a286cd)
             
             
@@ -15,7 +18,9 @@
         
         File processing , 
         
-        Rabbit MQ ,
+        Rabbit MQ reciver ,
+
+        Rabbit MQ publisher,
         
         Dsitrubution api,
         
@@ -39,10 +44,21 @@
         
         Stores malware files directly to minio.
         
-        It will be stored in minio bucket where bucket name will be extension of files.
+        Files will be stored in minio bucket where bucket name will be extension of files.
         
         The files will be renamed with global sha1 hashing before storing it to minio. ( Filename = hash + extension )
-      
+
+
+**Rabbit MQ reciver**,
+        Rabbit mq reciver uses rabbit mq queueing.
+
+        Reciver recives minio files from the queue and send it to File processing module
+
+**Rabbit MQ publisher**
+        Rabbit MQ publisher runs asynchronous process where it will get all the files from minio endpoint.
+
+        Send it to rabbit mq queue for reciver.
+
 **File processing**
 
         The files stored in minio will be downloaed in this pod.
@@ -71,10 +87,16 @@
 
         This api is responsible for dsitribution of the the above bundle zip on demand.
 
+## Tasks pending for next release
+        Batch processing in gw_crawler
+
+        Collecting atleast 10000 malware files and do file processing for the same and store in s3
+
+        Configaration of ELK for logs and cache
+
 
 # Release 0.1 
-Date : 18/09/2020
-##Test Data Release notes
+## Date : 18/09/2020
 
         Goal : Goal is to fetch malware files from various sites, store it in cloud and distribution of the same using api
 
@@ -86,7 +108,7 @@ Date : 18/09/2020
         
         The web scraper , minio and distribution api will be running in differnet pods and independent of each other
         
-##Pedning tasks
+## Pedning tasks
 
         Fetching XML report from virustotal is not implemented since once we send file to virustotal,it will go to queue and report will be generated after some minites. 
         
