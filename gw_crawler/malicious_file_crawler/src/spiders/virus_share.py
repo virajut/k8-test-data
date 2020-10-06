@@ -67,6 +67,7 @@ class VirusShareScraper(Scraper):
                 loader = ItemLoader(item=MaliciousFileCrawlerItem())
                 loader.add_value('extension', json_details['exif']['FileTypeExtension'])
                 loader.add_value('file_urls', url)
+                loader.add_value('hash_api_url', self.url.format(self.request_mode, None, response.meta['hash']))
                 yield loader.load_item()
 
         except Exception as err:

@@ -12,27 +12,34 @@ logger = logging.getLogger('GW: RabbitMQ Publisher')
 
 
 def publish_jobs():
+    logger.info('publish_jobs')
 
     minio_client = MinioClient()
-    minio_files = minio_client.get_all_files(Config.MINIO_BUCKET)
-
+    minio_files = []
     q = Queue()
-    for f in minio_files:
-        payload = {"type": "process_zip", "file": f, "bucket": Config.MINIO_BUCKET}
-        try:
-            q.put(payload)
-        except Exception as err:
-            logger.error(err)
+    buckets = minio_client.get_all_buckets()
+    if buckets:
+        for bucket in buckets:
+            logger.info(f'publish_jobs:bucket is {bucket}')
+            minio_files = []
+            minio_files = minio_client.get_all_files(bucket)
+            for f in minio_files:
+                logger.info(f'publish_jobs:File is {f}')
+                payload = {"type": "process_zip", "file": f, "bucket": bucket}
+                try:
+                    q.put(payload)
+                except Exception as err:
+                    logger.error(err)
     RabbitClient(q)
 
 
 if __name__ == "__main__":
-    
+
     try:
         schedule.every(1).minutes.do(publish_jobs)
         while True:
             schedule.run_pending()
-            time.sleep(1)    
+            time.sleep(1)
     except Exception as err:
         logger.error(str(err))
 

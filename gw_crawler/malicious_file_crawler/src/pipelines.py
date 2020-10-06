@@ -68,6 +68,7 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
             urls = ItemAdapter(item).get(self.files_urls_field, [])
             ext = ItemAdapter(item).get('extension', [])
             self.hash_api_url = ItemAdapter(item).get('hash_api_url', [])
+            logger.info(f'hash_api_url {self.hash_api_url}')
             if (ext):
                 self.extension = "." + ext[0]
 
@@ -82,7 +83,7 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
             hash_url = self.hash_api_url[0]
         else:
             hash_url = request.url[0]
-
+        logger.info(f'hash_url {hash_url}')
         media_guid = hashlib.sha1(to_bytes(hash_url)).hexdigest()
         media_ext = os.path.splitext(request.url)[1]
         # Handles empty and wild extensions by trying to guess the

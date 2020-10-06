@@ -31,10 +31,15 @@ def create_app():
                 Config.config_path
             )
         )
-        return send_file(
-            Config.output_path + "/" + file.filename,
-            attachment_filename=file.filename,
-            as_attachment=True,
-        )
+        logger.info(os.system("ls -alh /usr/src/app/rebuild_files/output/Managed"))
+        logger.info(os.system("cat /usr/src/app/rebuild_files/output/glasswallCLIProcess.log"))
+        try:
+            return send_file(
+                Config.output_path + "/" + file.filename,
+                attachment_filename=file.filename,
+                as_attachment=True,
+            )
+        except Exception:
+            return jsonify({"message":"failed"})
 
     return app

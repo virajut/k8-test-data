@@ -53,6 +53,7 @@ class MalShareScraper(Scraper):
                 loader = ItemLoader(item=MaliciousFileCrawlerItem())
                 loader.add_value('file_urls', url)
                 loader.add_value('extension', details["F_TYPE"])
+                loader.add_value('hash_api_url', self.url.format(None, _hash))
                 yield loader.load_item()
 
         except Exception as err:
