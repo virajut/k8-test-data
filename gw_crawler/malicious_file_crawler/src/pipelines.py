@@ -84,7 +84,7 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
         else:
             hash_url = request.url
         self.url = hash_url
-        logger.info(f'MaliciousFileCrawlerPipeline : file_path : malware urll :  {hash_url}')
+        logger.info(f'MaliciousFileCrawlerPipeline : file_path : malware url :  {hash_url}')
         media_guid = hashlib.sha1(to_bytes(hash_url)).hexdigest()
         media_ext = os.path.splitext(request.url)[1]
         # Handles empty and wild extensions by trying to guess the
