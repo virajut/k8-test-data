@@ -3,3 +3,4 @@ Flask==1.1.2
 pika==1.1.0
 requests==2.23.0
 pathlib==1.0.1
+minio==6.0.0

@@ -3,7 +3,7 @@ import pathlib
 from os.path import basename
 import zipfile
 from src.services import MinioService
-
+import datetime
 
 class FileService:
     @staticmethod
@@ -45,6 +45,8 @@ class FileService:
             meta['size']= str(file_stat.st_size) +  " bytes"
             meta["name"] = file_path.split("/")[-1]
             meta['hash']=file_path.split("/")[-1].split('.')[0]
+            meta['creation_date'] = datetime.datetime.now()
+            meta['expiry_date'] = None
             if not extension:
                 meta["extension"] = 'txt'
             else:
