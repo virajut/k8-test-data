@@ -18,6 +18,8 @@ class MinioService:
 
     def upload(self, file_path, bucket_name, file_name):
         try:
+            if not self.minio_client.bucket_exists(bucket_name):
+                self.minio_client.make_bucket(bucket_name)
             logger.info("Uploading file to bucket {} minio {}".format(bucket_name, self.url))
             self.minio_client.fput_object(bucket_name=bucket_name, file_path=file_path, object_name=file_name)
         except ClientError as e:
