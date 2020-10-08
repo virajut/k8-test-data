@@ -81,10 +81,7 @@ class Processor:
             meta = self.metadata
             meta['url'] = None
             if meta:
-                print('llls')
                 minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=self.filename)
-                print('kkdk')
-                print(minio_meta)
                 logger.info(f'minio_meta {minio_meta}')
                 if 'x-amz-meta-url' in minio_meta.metadata:
                     meta['url'] = minio_meta.metadata['x-amz-meta-url']
@@ -101,8 +98,8 @@ class Processor:
         logger.info("rebuilding with GW engine")
         try:
             response = GlasswallService.rebuild(self.infected_file, self.infected_path)
-            file = response.content
-            status = response.status_code
+            file=response.content
+            status=response.status_code
             logger.info(f'Processor : rebuild_glasswall report status: {status}')
             if file:
                 with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
