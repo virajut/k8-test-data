@@ -64,10 +64,15 @@ class Processor:
 
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
-        file = GlasswallService.rebuild(self.infected_file, self.infected_path)
+        file = GlasswallService.rebuild(self.infected_file, self.infected_path, '1')
         if file:
             with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
                 fp.write(file)
+
+        xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path, '0')
+        if xml_file:
+            with open(self.directory + f"/rebuild_report.xml", "wb") as fp:
+                fp.write(xml_file)
 
     def prepare_result(self):
         logger.info("combining all reports, original file and malicious file to a zip")
