@@ -1,5 +1,7 @@
 import logging as logger
 import os
+import zipfile
+from os.path import basename
 from pathlib import Path
 
 from flask import Flask, request, jsonify
@@ -82,6 +84,7 @@ class Processor:
             meta['url'] = None
             if meta:
                 minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=self.filename)
+
                 logger.info(f'minio_meta {minio_meta}')
                 if 'x-amz-meta-url' in minio_meta.metadata:
                     meta['url'] = minio_meta.metadata['x-amz-meta-url']
@@ -98,8 +101,8 @@ class Processor:
         logger.info("rebuilding with GW engine")
         try:
             response = GlasswallService.rebuild(self.infected_file, self.infected_path)
-            file=response.content
-            status=response.status_code
+            file = response.content
+            status = response.status_code
             logger.info(f'Processor : rebuild_glasswall report status: {status}')
             if file:
                 with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
@@ -115,6 +118,10 @@ class Processor:
     def prepare_result(self):
         try:
             logger.info("combining all reports, original file and malicious file to a zip")
+            file_path = self.infected_path + "/" + self.infected_file
+            malware__zip_name = self.directory + '/' + self.directory.split("/")[-1] + '.zip'
+            zipfile.ZipFile(malware__zip_name, mode='w').write(file_path, basename(file_path))
+            os.remove(self.infected_path + "/" + self.infected_file)
             FileService.prepare_zip(
                 self.directory.split("/")[-1], self.directory, Config.download_path
             )

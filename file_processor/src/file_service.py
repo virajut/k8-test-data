@@ -17,11 +17,11 @@ class FileService:
             zp.extractall(**params)
 
     @staticmethod
-    def prepare_zip(zip_filename, file, zip_path):
+    def prepare_zip(zip_filename, folder_path, zip_path):
 
         zip_filename = f"{zip_path}/{zip_filename}.zip"
         with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipObj:
-            for folderName, subfolders, filenames in os.walk(zip_path):
+            for folderName, subfolders, filenames in os.walk(folder_path):
                 for filename in filenames:
                     filePath = os.path.join(folderName, filename)
                     zipObj.write(filePath, basename(filePath))
