@@ -23,3 +23,8 @@ class Config(object):
 
     MQ_HOST = get_envar("MQ_HOST")
     MQ_QUEUE = get_envar("MQ_QUEUE")
+
+    GW_REBUILD_MODE = {
+        'xml_report': 0,
+        'file': 1,
+    }

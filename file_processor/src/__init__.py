@@ -111,7 +111,6 @@ class Processor:
             meta['url'] = None
             if meta:
                 minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=self.filename)
-
                 logger.info(f'minio_meta {minio_meta}')
                 if 'x-amz-meta-url' in minio_meta.metadata:
                     meta['url'] = minio_meta.metadata['x-amz-meta-url']
@@ -128,20 +127,32 @@ class Processor:
 
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
-        try:
-            response = GlasswallService.rebuild(self.infected_file, self.infected_path)
-            file = response.content
-            status = response.status_code
-            logger.info(f'Processor : rebuild_glasswall report status: {status}')
 
-            if status == 200:
-                self.gw_rebuild_status = True
+        try:
+            # Get rebuild file
+            file,status = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['file'])
+            self.gw_rebuild_status=status
+            if file:
                 with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
                     fp.write(file)
+
+            # Get xml report
+            xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path,
+                                                Config.GW_REBUILD_MODE['xml_report'])
+            if xml_file:
+                with open(self.directory + f"/rebuild_report.xml", "wb") as fp:
+                    fp.write(xml_file)
 
         except Exception as e:
             logger.error(f'Processor : rebuild_glasswall error: {e}')
             raise e
+
+
+        # Get xml report
+        xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['xml_report'])
+        if xml_file:
+            with open(self.directory + f"/rebuild_report.xml", "wb") as fp:
+                fp.write(xml_file)
 
     def prepare_result(self):
         try:

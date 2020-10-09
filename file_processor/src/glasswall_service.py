@@ -1,16 +1,34 @@
+import logging
+
 import requests
 
-
+logger = logging.getLogger("GW: GlasswallService")
 class GlasswallService:
+
     @staticmethod
-    def rebuild(filename, file):
+    def get_file(file, filename):
         file = file + "/" + filename
-        files = {"file": (filename, open(file, "rb"))}
-        response = requests.post("http://glasswall-rebuild:5003/process", files=files)
-        output = response
         try:
-            if "failed" in response:
+            return {"file": (filename, open(file, "rb"))}
+        except Exception:
+            logger.info(f"unable to get file {file}")
+            return False
+
+    @staticmethod
+    def rebuild(filename, file, mode):
+        status=False
+        files = GlasswallService.get_file(file, filename)
+        if not files:
+            return False
+        output = False
+        try:
+            response = requests.post("http://glasswall-rebuild:5003/process", files=files, data={'mode':mode })
+            if response.status_code ==200:
+                status = True
+        except Exception as ex:
+            logger.info(str(ex))
+        else:
+            output = response.content
+            if '"message": "failed"' in str(output):
                 output = False
-        except:
-            pass
-        return output
+        return output, status
