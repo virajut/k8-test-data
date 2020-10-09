@@ -21,6 +21,7 @@ class Processor:
     def __init__(self, filename, bucket_name):
         self.filename = filename
         self.bucket_name = bucket_name
+        self.hash = self.filename.split(".")[0]
         self.ext = None
         self.directory = None
         self.path = None
@@ -48,6 +49,7 @@ class Processor:
             logger.info(f"downloading file {self.filename} from minio")
             self.ext = self.filename.split(".")[-1]
             download_path = self.directory if self.ext == "zip" else self.infected_path
+
             self.minio.download_files(bucket_name=self.ext, file_name=self.filename, download_path=download_path)
 
             if self.ext == "zip":
@@ -55,7 +57,15 @@ class Processor:
                 file = os.listdir(self.infected_path)
                 if not file:
                     logger.error("no file inside zip")
-                self.infected_file = file[0]
+                else:
+                    base_path = self.infected_path + "/"
+                    os.rename(base_path + file[0], base_path + self.hash + "." + file[0].split(".")[-1])
+                    self.infected_file = file[0]
+        except Exception as error:
+            logger.error(f'Processor : download_and_unzip error: {error}')
+            raise error
+
+
         except Exception as error:
             logger.error(f'Processor : download_and_unzip error: {error}')
             raise error
@@ -68,9 +78,10 @@ class Processor:
             logger.info(f"Processor : check_virustotal report status: {resp['status_code']}")
             if resp['status_code'] == 200:
                 self.virus_total_status = True
-            # resp = "{'test':'1'}"
-            with open(self.directory + "/virustotal.json", "w") as fp:
-                fp.write(str(resp))
+                vt_file_name = self.directory + '/virustotal_' + self.hash + '.json'
+
+                with open(vt_file_name, "w") as fp:
+                    fp.write(str(resp))
 
         except Exception as e:
             logger.error(f'Processor : check_virustotal error: {e}')
@@ -91,7 +102,9 @@ class Processor:
                 meta['virus_total_status'] = self.virus_total_status
                 meta['gw_rebuild_status'] = self.gw_rebuild_status
 
-            with open(self.directory + "/" + meta['hash'] + ".json", "w") as fp:
+            meta_file_name = self.directory + '/metadata_' + self.hash + ".json"
+
+            with open(meta_file_name, "w") as fp:
                 fp.write(str(meta))
         except Exception as e:
             logger.error(f'Processor : get_metadata error: {e}')
@@ -104,12 +117,11 @@ class Processor:
             file = response.content
             status = response.status_code
             logger.info(f'Processor : rebuild_glasswall report status: {status}')
-            if file:
-                with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
-                    fp.write(file)
 
             if status == 200:
                 self.gw_rebuild_status = True
+                with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
+                    fp.write(file)
 
         except Exception as e:
             logger.error(f'Processor : rebuild_glasswall error: {e}')
@@ -119,14 +131,19 @@ class Processor:
         try:
             logger.info("combining all reports, original file and malicious file to a zip")
             file_path = self.infected_path + "/" + self.infected_file
-            malware__zip_name = self.directory + '/' + self.directory.split("/")[-1] + '.zip'
-            zipfile.ZipFile(malware__zip_name, mode='w').write(file_path, basename(file_path))
+            malware_zip_name = self.directory + '/' + self.directory.split("/")[-1] + '.zip'
+
+            zipfile.ZipFile(malware_zip_name, mode='w').write(file_path, basename(file_path))
             os.remove(self.infected_path + "/" + self.infected_file)
+
             FileService.prepare_zip(
-                self.directory.split("/")[-1], self.directory, Config.download_path
+                zip_filename=self.directory.split("/")[-1],
+                folder_path=self.directory,
+                zip_path=Config.download_path
             )
+
         except Exception as error:
-            logger.error(f'Processor : create_directory error: {error}')
+            logger.error(f'Processor : prepare_result: {error}')
             raise error
 
     def upload(self):
@@ -139,7 +156,7 @@ class Processor:
                 file_name=name + ".zip"
             )
         except Exception as error:
-            logger.error(f'Processor : create_directory error: {error}')
+            logger.error(f'Processor : upload error: {error}')
             raise error
 
     def send_mq(self):
@@ -153,7 +170,7 @@ class Processor:
             }
             MQService.send(payload)
         except Exception as error:
-            logger.error(f'Processor : create_directory error: {error}')
+            logger.error(f'Processor : send_mq: {error}')
             raise error
 
     def process(self):
