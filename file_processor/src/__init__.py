@@ -64,12 +64,14 @@ class Processor:
 
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
-        file = GlasswallService.rebuild(self.infected_file, self.infected_path, '1')
+        # Get rebuild file
+        file = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['file'])
         if file:
             with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
                 fp.write(file)
 
-        xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path, '0')
+        # Get xml report
+        xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['xml_report'])
         if xml_file:
             with open(self.directory + f"/rebuild_report.xml", "wb") as fp:
                 fp.write(xml_file)
