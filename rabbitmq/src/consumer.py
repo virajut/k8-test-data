@@ -1,5 +1,4 @@
 import logging
-import logging as logger
 import time
 
 import json
@@ -8,7 +7,6 @@ import pika
 import requests
 import sys
 
-logger.basicConfig(level=logger.INFO)
 from src.config import Config
 
 logger = logging.getLogger('GW: RabbitMQ Consumer')
@@ -96,7 +94,6 @@ class Consumer:
 
     @staticmethod
     def run():
-        time.sleep(30)
         try:
             Consumer().connect()
         except KeyboardInterrupt:

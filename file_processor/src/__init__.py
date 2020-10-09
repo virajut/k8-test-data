@@ -50,12 +50,9 @@ class Processor:
             logger.info(f"downloading file {self.filename} from minio")
             self.ext = self.filename.split(".")[-1]
             download_path = self.directory if self.ext == "zip" else self.infected_path
-
             self.minio.download_files(bucket_name=self.ext, file_name=self.filename, download_path=download_path)
 
-
             if self.ext == "zip":
-                pass
                 FileService.unzip(self.path, self.infected_path)
                 file = os.listdir(self.infected_path)
                 if not file:
@@ -64,23 +61,22 @@ class Processor:
                     name = self.file[0].split(".")[0]
                     hash = hashlib.sha1(str(name).encode()).hexdigest()
                     base_path = self.infected_path + "/"
-                    src= base_path + file[0]
-                    target=base_path + hash + "." + file[0].split(".")[-1]
+                    src = base_path + file[0]
+                    target = base_path + hash + "." + file[0].split(".")[-1]
                     os.rename(src, target)
                     self.infected_file = hash + "." + file[0].split(".")[-1]
             else:
                 name = self.infected_file.split(".")[0]
                 self.hash = hashlib.sha1(str(name).encode()).hexdigest()
                 base_path = self.infected_path + "/"
-                src =  base_path + self.filename
-                target =  base_path + self.hash + '.' + self.filename.split(".")[-1]
+                src = base_path + self.filename
+                target = base_path + self.hash + '.' + self.filename.split(".")[-1]
                 os.rename(src, target)
 
                 self.infected_file = self.hash + '.' + self.filename.split(".")[-1]
         except Exception as error:
             logger.error(f'Processor : download_and_unzip error: {error}')
             raise error
-
 
         except Exception as error:
             logger.error(f'Processor : download_and_unzip error: {error}')
@@ -89,7 +85,6 @@ class Processor:
     def check_virustotal(self):
         try:
             logger.info("checking malicious with VirusTotal")
-
             resp = self.vt.file_scan(self.infected_path + "/" + self.infected_file)
             logger.info(f"Processor : check_virustotal report status: {resp['status_code']}")
             if resp['status_code'] == 200:
@@ -127,32 +122,30 @@ class Processor:
 
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
-
         try:
-            # Get rebuild file
-            file,status = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['file'])
-            self.gw_rebuild_status=status
-            if file:
-                with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
-                    fp.write(file)
-
+            response = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['file'])
+            logger.info(f'rebuild file response : {response} ')
+            if response:
+                file = response.content
+                status = response.status_code
+                if status:
+                    with open(self.directory + f"/rebuild_{self.infected_file}", "wb") as fp:
+                        fp.write(file)
             # Get xml report
-            xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path,
+            response = GlasswallService.rebuild(self.infected_file, self.infected_path,
                                                 Config.GW_REBUILD_MODE['xml_report'])
-            if xml_file:
-                with open(self.directory + f"/rebuild_report.xml", "wb") as fp:
-                    fp.write(xml_file)
+            logger.info(f'rebuild xml_file response : {response} ')
+            if response:
+                xml_file = response.content
+                status = response.status_code
+                if status:
+                    with open(self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb") as fp:
+                        fp.write(xml_file)
+                        
+        except Exception as error:
+            logger.error(f'Processor : rebuild_glasswall: {error}')
+            raise error
 
-        except Exception as e:
-            logger.error(f'Processor : rebuild_glasswall error: {e}')
-            raise e
-
-
-        # Get xml report
-        xml_file = GlasswallService.rebuild(self.infected_file, self.infected_path, Config.GW_REBUILD_MODE['xml_report'])
-        if xml_file:
-            with open(self.directory + f"/rebuild_report.xml", "wb") as fp:
-                fp.write(xml_file)
 
     def prepare_result(self):
         try:

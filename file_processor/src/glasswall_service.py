@@ -16,19 +16,16 @@ class GlasswallService:
 
     @staticmethod
     def rebuild(filename, file, mode):
-        status=False
         files = GlasswallService.get_file(file, filename)
         if not files:
-            return False
+            return None
         output = False
         try:
-            response = requests.post("http://glasswall-rebuild:5003/process", files=files, data={'mode':mode })
-            if response.status_code ==200:
-                status = True
+            response = requests.post("http://glasswall-rebuild:5003/process", files=files, data={'mode': mode})
         except Exception as ex:
             logger.info(str(ex))
         else:
-            output = response.content
+            output = response
             if '"message": "failed"' in str(output):
-                output = False
-        return output, status
+                output = None
+        return output
