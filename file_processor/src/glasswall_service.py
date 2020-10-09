@@ -3,8 +3,6 @@ import logging
 import requests
 
 logger = logging.getLogger("GW: GlasswallService")
-
-
 class GlasswallService:
 
     @staticmethod

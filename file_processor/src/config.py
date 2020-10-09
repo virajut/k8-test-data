@@ -12,7 +12,6 @@ def get_envar(k, required=True):
         exit(msg)
     return val
 
-
 class Config(object):
     download_path = "/usr/src/app/storage"
     MINIO_URL = get_envar("MINIO_URL")
