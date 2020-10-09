@@ -141,11 +141,10 @@ class Processor:
                 if status:
                     with open(self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb") as fp:
                         fp.write(xml_file)
-                        
+
         except Exception as error:
             logger.error(f'Processor : rebuild_glasswall: {error}')
             raise error
-
 
     def prepare_result(self):
         try:

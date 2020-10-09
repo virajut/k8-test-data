@@ -1,10 +1,8 @@
-import logging
 import os
 import pathlib
-from os.path import basename
 import zipfile
-from src.services import MinioService
-import datetime
+from os.path import basename
+
 
 class FileService:
     @staticmethod
@@ -42,9 +40,9 @@ class FileService:
             suffix = pathlib.Path(file_path).suffix
             extension = suffix.split(".")[-1]
 
-            meta['size']= str(file_stat.st_size) +  " bytes"
+            meta['size'] = str(file_stat.st_size) + " bytes"
             meta["name"] = file_path.split("/")[-1]
-            meta['hash']=file_path.split("/")[-1].split('.')[0]
+            meta['hash'] = file_path.split("/")[-1].split('.')[0]
             meta['creation_date'] = datetime.datetime.now()
             meta['expiry_date'] = None
             if not extension:
