@@ -16,7 +16,7 @@ class GlasswallService:
             return False
 
     @staticmethod
-    def rebuild(filename, file, mode='1'):
+    def rebuild(filename, file, mode):
         files = GlasswallService.get_file(file, filename)
         if not files:
             return False
