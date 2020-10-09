@@ -1,3 +1,4 @@
+import hashlib
 import logging as logger
 import os
 import zipfile
@@ -21,7 +22,7 @@ class Processor:
     def __init__(self, filename, bucket_name):
         self.filename = filename
         self.bucket_name = bucket_name
-        self.hash = self.filename.split(".")[0]
+        self.hash = None
         self.ext = None
         self.directory = None
         self.path = None
@@ -52,15 +53,30 @@ class Processor:
 
             self.minio.download_files(bucket_name=self.ext, file_name=self.filename, download_path=download_path)
 
+
             if self.ext == "zip":
+                pass
                 FileService.unzip(self.path, self.infected_path)
                 file = os.listdir(self.infected_path)
                 if not file:
                     logger.error("no file inside zip")
                 else:
+                    name = self.file[0].split(".")[0]
+                    hash = hashlib.sha1(str(name).encode()).hexdigest()
                     base_path = self.infected_path + "/"
-                    os.rename(base_path + file[0], base_path + self.hash + "." + file[0].split(".")[-1])
-                    self.infected_file = file[0]
+                    src= base_path + file[0]
+                    target=base_path + hash + "." + file[0].split(".")[-1]
+                    os.rename(src, target)
+                    self.infected_file = hash + "." + file[0].split(".")[-1]
+            else:
+                name = self.infected_file.split(".")[0]
+                self.hash = hashlib.sha1(str(name).encode()).hexdigest()
+                base_path = self.infected_path + "/"
+                src =  base_path + self.filename
+                target =  base_path + self.hash + '.' + self.filename.split(".")[-1]
+                os.rename(src, target)
+
+                self.infected_file = self.hash + '.' + self.filename.split(".")[-1]
         except Exception as error:
             logger.error(f'Processor : download_and_unzip error: {error}')
             raise error
@@ -131,7 +147,7 @@ class Processor:
         try:
             logger.info("combining all reports, original file and malicious file to a zip")
             file_path = self.infected_path + "/" + self.infected_file
-            malware_zip_name = self.directory + '/' + self.directory.split("/")[-1] + '.zip'
+            malware_zip_name = self.directory + '/' + self.hash + '.zip'
 
             zipfile.ZipFile(malware_zip_name, mode='w').write(file_path, basename(file_path))
             os.remove(self.infected_path + "/" + self.infected_file)
@@ -153,7 +169,7 @@ class Processor:
             self.minio.upload(
                 file_path=Config.download_path + "/" + name + ".zip",
                 bucket_name="processed",
-                file_name=name + ".zip"
+                file_name=self.hash + ".zip"
             )
         except Exception as error:
             logger.error(f'Processor : upload error: {error}')

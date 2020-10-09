@@ -12,8 +12,7 @@ class FileService:
             params = {
                 "path": extract_path,
             }
-            if password:
-                params["pwd"] = bytes(os.environ["vs_zip_pwd"], "utf-8")
+            params["pwd"] = bytes(os.environ["vs_zip_pwd"], "utf-8")
             zp.extractall(**params)
 
     @staticmethod
