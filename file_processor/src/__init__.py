@@ -1,6 +1,7 @@
 import hashlib
 import logging as logger
 import os
+import json
 import zipfile
 from os.path import basename
 from pathlib import Path
@@ -51,6 +52,7 @@ class Processor:
             self.ext = self.filename.split(".")[-1]
             download_path = self.directory if self.ext == "zip" else self.infected_path
             self.minio.download_files(bucket_name=self.ext, file_name=self.filename, download_path=download_path)
+            base_path = self.infected_path + "/"
 
             if self.ext == "zip":
                 FileService.unzip(self.path, self.infected_path)
@@ -58,13 +60,18 @@ class Processor:
                 if not file:
                     logger.error("no file inside zip")
                 else:
-                    name = self.file[0].split(".")[0]
-                    hash = hashlib.sha1(str(name).encode()).hexdigest()
-                    base_path = self.infected_path + "/"
-                    src = base_path + file[0]
-                    target = base_path + hash + "." + file[0].split(".")[-1]
+                    current_file = file[-1]
+                    ###
+                    if len(file) > 1:
+                        for f in file[0:-1]:
+                            os.remove(base_path + f)
+
+                    name = current_file.split(".")[0]
+                    self.hash = hashlib.sha1(str(name).encode()).hexdigest()
+                    src = base_path + current_file
+                    target = base_path + self.hash + "." + current_file.split(".")[-1]
                     os.rename(src, target)
-                    self.infected_file = hash + "." + file[0].split(".")[-1]
+                    self.infected_file = self.hash + "." + current_file.split(".")[-1]
             else:
                 name = self.infected_file.split(".")[0]
                 self.hash = hashlib.sha1(str(name).encode()).hexdigest()
@@ -88,9 +95,9 @@ class Processor:
             resp = self.vt.file_scan(self.infected_path + "/" + self.infected_file)
             logger.info(f"Processor : check_virustotal report status: {resp['status_code']}")
             if resp['status_code'] == 200:
+                # print("resp", resp)
                 self.virus_total_status = True
                 vt_file_name = self.directory + '/virustotal_' + self.hash + '.json'
-
                 with open(vt_file_name, "w") as fp:
                     fp.write(str(resp))
 
@@ -107,10 +114,11 @@ class Processor:
             if meta:
                 minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=self.filename)
                 logger.info(f'minio_meta {minio_meta}')
-                if 'x-amz-meta-url' in minio_meta.metadata:
-                    meta['url'] = minio_meta.metadata['x-amz-meta-url']
-                meta['virus_total_status'] = self.virus_total_status
-                meta['gw_rebuild_status'] = self.gw_rebuild_status
+                if minio_meta:
+                    if 'x-amz-meta-url' in minio_meta.metadata:
+                        meta['url'] = minio_meta.metadata['x-amz-meta-url']
+                    meta['virus_total_status'] = self.virus_total_status
+                    meta['gw_rebuild_status'] = self.gw_rebuild_status
 
             meta_file_name = self.directory + '/metadata_' + self.hash + ".json"
 
@@ -154,6 +162,8 @@ class Processor:
 
             zipfile.ZipFile(malware_zip_name, mode='w').write(file_path, basename(file_path))
             os.remove(self.infected_path + "/" + self.infected_file)
+            # if self.ext == 'zip':
+            #     os.remove(self.infected_path + "/" + self.filename)
 
             FileService.prepare_zip(
                 zip_filename=self.directory.split("/")[-1],

@@ -46,9 +46,9 @@ class MinioService:
             logger.error(f'Minio_service: download_files : {e} ')
 
     def get_stat(self, bucket_name, file_name):
+        stat = None
         try:
             stat = self.minio_client.stat_object(bucket_name=bucket_name, object_name=file_name)
-            return stat
         except ClientError as e:
             logger.error(
                 "Cannot connect to the minio {}. Please vefify the Credentials.".format(
@@ -58,3 +58,9 @@ class MinioService:
         except Exception as e:
             logger.error(f'Minio_Service : get_stat : {e} ')
             pass
+
+        if stat:
+            if not stat.metadata:
+                stat = None
+        return stat
+
