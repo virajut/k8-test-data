@@ -1,0 +1,58 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: file-processor
+  name: file-processor-deploy
+  namespace: k8-test-data
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: file-processor
+  template:
+    metadata:
+      labels:
+        app: file-processor
+    spec:
+      containers:
+      - name: file-processor-pod
+        image: karthyuom/k8-file-processor:1.0.21
+        env:
+        - name: MQ_HOST
+          value: rabbitmq
+        - name: MQ_QUEUE
+          value: queue01
+        - name: PYTHONUNBUFFERED
+          value: "0"
+        - name: MINIO_URL
+          value: 192.168.99.1:9001
+        - name: MINIO_ACCESS_KEY
+          value: "minio1"
+        - name: MINIO_SECRET_KEY
+          value: "minio1@123"
+        - name: vs_zip_pwd
+          value: "infected"
+        - name: virustotal_url
+          value: https://www.virustotal.com/vtapi/v2/
+        - name: virustotal_key
+          value: "f0253dca5f1f4c3188e111a8bec45d6ada60d865b5f2b5e3cf1958c3ae5e3fba"
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+---
+
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: file-processor-svc
+  namespace: k8-test-data
+spec:
+  ports:
+    - port: 5000
+      targetPort: 5000
+  selector:
+    app: file-processor
+
