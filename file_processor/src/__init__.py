@@ -29,7 +29,8 @@ class Processor:
         self.infected_path = None
         self.infected_file = None
         self.virus_total_status = False
-        self.gw_rebuild_status = False
+        self.gw_rebuild_file_status= False
+        self.gw_rebuild_xml_status = False
         self.minio = MinioService(
             Config.MINIO_URL, Config.MINIO_ACCESS_KEY, Config.MINIO_SECRET_KEY
         )
@@ -39,6 +40,7 @@ class Processor:
         files = []
         self.filename = filename
         name, ext = self.filename.split(".")
+        self.bucket_name = ext
         logger.info(f"downloading file {filename} from minio")
         self.directory = Config.download_path + "/" + name
         self.minio.download_files(
@@ -76,7 +78,8 @@ class Processor:
         Path(self.directory).mkdir(parents=True, exist_ok=True)
 
         # Move current file to it's own directory
-        self.file_path = self.directory + "/" + self.hash
+        self.file_path = self.directory + "/" + self.hash + "." + self.ext
+        logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
         os.rename(file_path, self.file_path)
 
     def check_virustotal(self):
@@ -102,15 +105,19 @@ class Processor:
         try:
             self.metadata = FileService.get_file_meta(self.file_path)
             meta = self.metadata
-            # meta['url'] = None
-            # if meta:
-            #     minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=self.filename)
-            #     logger.info(f'minio_meta {minio_meta}')
-            #     if minio_meta:
-            #         if 'x-amz-meta-url' in minio_meta.metadata:
-            #             meta['url'] = minio_meta.metadata['x-amz-meta-url']
-            #         meta['virus_total_status'] = self.virus_total_status
-            #         meta['gw_rebuild_status'] = self.gw_rebuild_status
+            meta['url'] = None
+            if meta:
+                logger.info(f'get_metadata : bucket_name {self.bucket_name}')
+                logger.info(f'get_metadata : bucket_name {self.bucket_name}')
+                minio_meta = self.minio.get_stat(bucket_name=self.bucket_name,
+                                                 file_name=self.filename + '.' +  self.ext )
+                logger.info(f'minio_meta {minio_meta}')
+                if minio_meta:
+                    if 'x-amz-meta-url' in minio_meta.metadata:
+                        meta['url'] = minio_meta.metadata['x-amz-meta-url']
+                meta['virus_total_status'] = self.virus_total_status
+                meta['gw_rebuild_xml_status'] = self.gw_rebuild_xml_status
+                meta['gw_rebuild_file_status'] = self.gw_rebuild_file_status
 
             meta_file_name = self.directory + "/metadata_" + self.hash + ".json"
 
@@ -124,28 +131,31 @@ class Processor:
         logger.info("rebuilding with GW engine")
         try:
             response = GlasswallService.rebuild(
-                self.hash, self.directory, Config.GW_REBUILD_MODE["file"]
+                self.hash +'.' + self.ext , self.directory, Config.GW_REBUILD_MODE["file"]
             )
             logger.info(f"rebuild file response : {response} ")
             if response:
                 file = response.content
                 status = response.status_code
-                if status:
+                if status==200:
+                    self.gw_rebuild_file_status = True
                     with open(self.directory + f"/rebuild_{self.hash}", "wb") as fp:
                         fp.write(file)
             # Get xml report
             response = GlasswallService.rebuild(
-                self.hash, self.directory, Config.GW_REBUILD_MODE["xml_report"]
+                self.hash + '.' + self.ext , self.directory, Config.GW_REBUILD_MODE["xml_report"]
             )
             logger.info(f"rebuild xml_file response : {response} ")
             if response:
                 xml_file = response.content
                 status = response.status_code
-                if status:
+                if status==200:
+                    self.gw_rebuild_xml_status = True
                     with open(
-                        self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb"
+                            self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb"
                     ) as fp:
                         fp.write(xml_file)
+
         except Exception as error:
             logger.error(f"Processor : rebuild_glasswall: {error}")
             raise error
