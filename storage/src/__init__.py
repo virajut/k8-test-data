@@ -5,6 +5,7 @@ import os
 import socket
 from io import BytesIO
 
+import requests
 from flask import Flask, request, Response
 
 from .config import Config
@@ -63,6 +64,21 @@ def create_app():
 
             client.upload_data_stream(bucket_name=bucket, file_name=name, data_stream=data,
                                       length=data.getbuffer().nbytes, metadata=meta)
+
+            try:
+                rabbit_mq_api = os.environ.get('rabbit_mq_api', None)
+                logger.info(f"calling rabbit_mq_api {rabbit_mq_api}")
+
+                payload = {'file_name': name, 'bucket_name': bucket}
+                payload = json.dumps(payload)
+                payload = json.loads(payload)
+
+                logger.info(type(payload))
+                logger.info(f"calling payload {payload}")
+                response = requests.post(rabbit_mq_api, json=payload)
+                logger.info(f"calling response {response}")
+            except Exception as ex:
+                logger.error(ex)
 
             ret = {"err": "none"}
         except Exception as error:

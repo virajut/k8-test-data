@@ -7,7 +7,6 @@ def get_envar(k, required=True):
         exit(f"{k} not supplied")
     return val
 
-
 class Config(object):
     DEBUG = True
 

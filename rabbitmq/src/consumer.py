@@ -33,14 +33,16 @@ class Consumer:
     def _handler_process_zip(self, payload):
         try:
             logger.info("calling file_processor service..")
-            requests.post("http://k8-file-processor:5000/process", json=payload)
+            file_processor_api=os.environ.get('file_processor_api',None)
+            requests.post(file_processor_api, json=payload)
         except Exception as error:
             logger.error(f'Consumer : _handler_process_zip : error : {error}')
 
     def _handler_s3_sync(self, payload):
         try:
             logger.info("calling s3_sync service..")
-            requests.post("http://k8-s3-sync:5004/tos3", json=payload)
+            s3_sync_api=os.environ.get('s3_sync_api',None)
+            requests.post(s3_sync_api, json=payload)
         except Exception as e:
             logger.error(f'Consumer : _handler_process_zip : error : {e}')
 

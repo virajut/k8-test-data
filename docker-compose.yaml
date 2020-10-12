@@ -50,6 +50,7 @@ services:
       - 5002:5000
     depends_on:
       - minio
+      - rabbitmq
 
   rabbitmq-process:
     image: rabbit-mq:1.0
@@ -58,6 +59,9 @@ services:
       dockerfile: rabbitmq/Dockerfile
     env_file:
       - rabbitmq/.env
+    ports:
+      - 50057:50057
+      - 5006:5006
     restart: on-failure
     depends_on:
       - rabbitmq
