@@ -1,8 +1,11 @@
 import logging
+import os
 
 import requests
 
 logger = logging.getLogger("GW: GlasswallService")
+
+
 class GlasswallService:
 
     @staticmethod
@@ -21,7 +24,8 @@ class GlasswallService:
             return None
         output = False
         try:
-            response = requests.post("http://glasswall-rebuild:5003/process", files=files, data={'mode': mode})
+            rebuild_api = os.environ.get('rebuild_api', None)
+            response = requests.post(rebuild_api, files=files, data={'mode': mode})
         except Exception as ex:
             logger.info(str(ex))
         else:
