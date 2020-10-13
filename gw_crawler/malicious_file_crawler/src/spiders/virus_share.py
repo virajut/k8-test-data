@@ -63,10 +63,10 @@ class VirusShareScraper(Scraper):
                 file_details_url = self.url.format("file", self.api_key, response.meta['hash'])
                 details = VirusShareScraper.get(file_details_url)
                 json_str = details.content
+                loader = ItemLoader(item=MaliciousFileCrawlerItem())
                 try:
                     if json_str :
                         json_details = json.loads(json_str)
-                        loader = ItemLoader(item=MaliciousFileCrawlerItem())
                         loader.add_value('extension', json_details['exif']['FileTypeExtension'])
                 except:
                     pass
