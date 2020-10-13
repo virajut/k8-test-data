@@ -29,6 +29,7 @@ class Consumer:
             "process_zip": self._handler_process_zip,
             "s3_sync": self._handler_s3_sync,
         }
+        self.payload=None
 
     def _handler_process_zip(self, payload):
         try:
@@ -44,7 +45,7 @@ class Consumer:
             s3_sync_api=os.environ.get('s3_sync_api',None)
             requests.post(s3_sync_api, json=payload)
         except Exception as e:
-            logger.error(f'Consumer : _handler_process_zip : error : {e}')
+            logger.error(f'Consumer : _handler_s3_sync : error : {e}')
 
     def on_message_receive(self, ch, method, properties, body):
         logger.info(" [x] Received ")
@@ -58,21 +59,27 @@ class Consumer:
             handler = self.receivers.get(payload["type"], None)
             if not handler:
                 logger.info("invalid payload type.")
-            handler(payload)
-
-        logger.info(" [x] Done")
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+            if self.payload == payload:
+                logger.info('reject message')
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+            else:
+                handler(payload)
+                self.payload = payload
+                logger.info(" [x] Done")
+                ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def connect(self):
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=os.environ["MQ_HOST"])
         )
         channel = connection.channel()
+        self.channel=channel
 
         channel.queue_declare(queue=os.environ["MQ_QUEUE"])
 
         def callback(ch, method, properties, body):
             logger.info(" [x] Received ")
+            logger.info(f'body of consumer {body}')
             msg = body.decode()
             logger.info(msg)
             try:
@@ -83,6 +90,8 @@ class Consumer:
                 handler = self.receivers.get(payload["type"], None)
                 if not handler:
                     logger.info("invalid payload type.")
+
+                logger.info(f"payload of consumer{payload}")
                 handler(payload)
 
             logger.info(" [x] Done")

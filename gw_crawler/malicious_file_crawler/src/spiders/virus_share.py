@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 
 import requests
 
@@ -26,7 +27,9 @@ class VirusShareScraper(Scraper):
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
         'CONCURRENT_REQUESTS': 1,
-        'DOWNLOAD_DELAY': 25,
+        'CONCURRENT_REQUESTS_PER_DOMAIN' : 1,
+        'DOWNLOAD_DELAY': 15,
+
     }
 
     def __init__(self, config=None, data=None):
@@ -45,7 +48,6 @@ class VirusShareScraper(Scraper):
         try:
             logger.info(f'Site url : {self.base_url}')
             hashes = self.scrape_hashes()
-
             for _hash in hashes:
                 yield scrapy.Request(url=self.base_url, callback=self.parser, meta={'hash': _hash})
         except Exception as error:
@@ -62,14 +64,16 @@ class VirusShareScraper(Scraper):
                 url = self.url.format(self.request_mode, self.api_key, response.meta['hash'])
                 file_details_url = self.url.format("file", self.api_key, response.meta['hash'])
                 details = VirusShareScraper.get(file_details_url)
-                json_str = details.content
+                time.sleep(15)
                 loader = ItemLoader(item=MaliciousFileCrawlerItem())
-                try:
-                    if json_str :
-                        json_details = json.loads(json_str)
-                        loader.add_value('extension', json_details['exif']['FileTypeExtension'])
-                except:
-                    pass
+                if details.status_code==200 :
+                    json_str = details.content
+                    try:
+                        if json_str :
+                            json_details = json.loads(json_str)
+                            loader.add_value('extension', json_details['exif']['FileTypeExtension'])
+                    except:
+                        pass
                 loader.add_value('file_urls', url)
                 loader.add_value('hash_api_url', self.url.format(self.request_mode, None, response.meta['hash']))
                 yield loader.load_item()

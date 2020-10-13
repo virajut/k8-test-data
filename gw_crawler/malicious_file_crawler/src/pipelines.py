@@ -79,13 +79,15 @@ class MaliciousFileCrawlerPipeline(FilesPipeline):
             raise error
 
     def file_path(self, request, response=None, info=None):
-        if (self.hash_api_url):
-            hash_url = self.hash_api_url
-        else:
-            hash_url = request.url
-        self.url = hash_url
-        logger.info(f'MaliciousFileCrawlerPipeline : file_path : malware url :  {hash_url}')
-        media_guid = hashlib.sha1(to_bytes(hash_url)).hexdigest()
+        self.url=request.url
+        vs_key=os.environ.get('VIRUSSHARE_API_KEY')
+        mal_key=os.environ.get('MALSHARE_API_KEY')
+
+        self.url=self.url.replace(vs_key, "")
+        self.url=self.url.replace(mal_key, "")
+
+        logger.info(f'MaliciousFileCrawlerPipeline : file_path : malware url :  {self.url}')
+        media_guid = hashlib.sha1(to_bytes(self.url)).hexdigest()
         media_ext = os.path.splitext(request.url)[1]
         # Handles empty and wild extensions by trying to guess the
         # mime type then extension or default to empty string otherwise
