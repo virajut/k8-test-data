@@ -26,7 +26,7 @@ class VirusShareScraper(Scraper):
     custom_settings = {
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
         'CONCURRENT_REQUESTS': 1,
-        'DOWNLOAD_DELAY': 15,
+        'DOWNLOAD_DELAY': 25,
     }
 
     def __init__(self, config=None, data=None):
@@ -63,9 +63,13 @@ class VirusShareScraper(Scraper):
                 file_details_url = self.url.format("file", self.api_key, response.meta['hash'])
                 details = VirusShareScraper.get(file_details_url)
                 json_str = details.content
-                json_details = json.loads(json_str)
-                loader = ItemLoader(item=MaliciousFileCrawlerItem())
-                loader.add_value('extension', json_details['exif']['FileTypeExtension'])
+                try:
+                    if json_str :
+                        json_details = json.loads(json_str)
+                        loader = ItemLoader(item=MaliciousFileCrawlerItem())
+                        loader.add_value('extension', json_details['exif']['FileTypeExtension'])
+                except:
+                    pass
                 loader.add_value('file_urls', url)
                 loader.add_value('hash_api_url', self.url.format(self.request_mode, None, response.meta['hash']))
                 yield loader.load_item()
