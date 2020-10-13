@@ -82,9 +82,7 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 * Set .env file in each service
 
-`docker build -t rabbitmq-receiver:1.0 rabbitmq_receiver`
-
-`docker build -t rabbitmq-publisher:1.0 rabbitmq_publisher`
+`docker build -t rabbit-mq:1.0 rabbitmq`
 
 `docker build -t glasswallcrawler:1.0 gw_crawler`
 
