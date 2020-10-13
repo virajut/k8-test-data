@@ -77,13 +77,16 @@ def create_app():
                 logger.info(f"calling payload {payload}")
                 response = requests.post(rabbit_mq_api, json=payload)
                 logger.info(f"calling response {response}")
-            except Exception as ex:
-                logger.error(ex)
+                ret = {"err": "none"}
+            except Exception as err:
+                ret = {"err": err}
+                logger.error(err)
+                raise err
 
-            ret = {"err": "none"}
+
         except Exception as error:
             logger.error(f'create_app : upload_stream : {error}')
-            ret = {"err": "none"}
+            ret = {"err": error }
             raise error
 
         return Response(json.dumps(ret), mimetype='application/json')
