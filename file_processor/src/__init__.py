@@ -130,6 +130,7 @@ class Processor:
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
         try:
+            rebuild_file_name=self.hash+'.' + self.ext
             response = GlasswallService.rebuild(
                 self.hash +'.' + self.ext , self.directory, Config.GW_REBUILD_MODE["file"]
             )
@@ -139,7 +140,7 @@ class Processor:
                 status = response.status_code
                 if status==200:
                     self.gw_rebuild_file_status = True
-                    with open(self.directory + f"/rebuild_{self.hash}", "wb") as fp:
+                    with open(self.directory + f"/rebuild_{rebuild_file_name}", "wb") as fp:
                         fp.write(file)
             # Get xml report
             response = GlasswallService.rebuild(
