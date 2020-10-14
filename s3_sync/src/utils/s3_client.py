@@ -20,7 +20,7 @@ class S3Client:
             config=Config(signature_version="s3v4", s3={'addressing_style': 'virtual'}),
         )
 
-    def upload_file(self, file_path, file_name):
+    def upload_file(self, file_path, file_name, bucket):
         try:
             if (self.s3.Bucket(AppConfig.S3_BUCKET) in self.s3.buckets.all()) == False:
                 self.s3.create_bucket(
@@ -32,8 +32,8 @@ class S3Client:
             logger.info(
                 "Uploading file to bucket {} minio {}".format(AppConfig.S3_BUCKET, self.url)
             )
-            self.s3.Bucket(AppConfig.S3_BUCKET).upload_file(file_path, file_name)
-            return AppConfig.S3_BUCKET + "/" + file_name
+            self.s3.Bucket(AppConfig.S3_BUCKET).upload_file(file_path, bucket + "/" + file_name)
+            return AppConfig.S3_BUCKET + "/" + bucket + "/" + file_name
         except ClientError as e:
             logger.error(
                 "Cannot connect to the S3 {}. Please vefify the Credentials.".format(

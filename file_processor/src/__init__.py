@@ -35,6 +35,7 @@ class Processor:
             Config.MINIO_URL, Config.MINIO_ACCESS_KEY, Config.MINIO_SECRET_KEY
         )
         self.vt = VirusTotalService(Config.virustotal_key)
+        self.input_file=None
 
     def get_files(self, filename):
         files = []
@@ -66,6 +67,7 @@ class Processor:
 
         try:
             self.filename, self.ext = filename.split(".")
+
         except Exception:
             self.filename = filename
             self.ext = None
@@ -78,7 +80,11 @@ class Processor:
         Path(self.directory).mkdir(parents=True, exist_ok=True)
 
         # Move current file to it's own directory
-        self.file_path = self.directory + "/" + self.hash + "." + self.ext
+        if self.ext:
+            self.file_path = self.directory + "/" + self.hash + "." + self.ext
+        else :
+            self.file_path = self.directory + "/" + self.hash
+
         logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
         os.rename(file_path, self.file_path)
 
@@ -107,10 +113,11 @@ class Processor:
             meta = self.metadata
             meta['url'] = None
             if meta:
+
                 logger.info(f'get_metadata : bucket_name {self.bucket_name}')
                 logger.info(f'get_metadata : bucket_name {self.bucket_name}')
                 minio_meta = self.minio.get_stat(bucket_name=self.bucket_name,
-                                                 file_name=self.filename + '.' +  self.ext )
+                                                 file_name=self.input_file)
                 logger.info(f'minio_meta {minio_meta}')
                 if minio_meta:
                     if 'x-amz-meta-url' in minio_meta.metadata:
@@ -130,9 +137,9 @@ class Processor:
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
         try:
-            rebuild_file_name=self.hash+'.' + self.ext
+            rebuild_file_name = self.hash+ '.' + self.ext if self.ext is not None else self.hash
             response = GlasswallService.rebuild(
-                self.hash +'.' + self.ext , self.directory, Config.GW_REBUILD_MODE["file"]
+                rebuild_file_name , self.directory, Config.GW_REBUILD_MODE["file"]
             )
             logger.info(f"rebuild file response : {response} ")
             if response:
@@ -144,7 +151,7 @@ class Processor:
                         fp.write(file)
             # Get xml report
             response = GlasswallService.rebuild(
-                self.hash + '.' + self.ext , self.directory, Config.GW_REBUILD_MODE["xml_report"]
+                rebuild_file_name , self.directory, Config.GW_REBUILD_MODE["xml_report"]
             )
             logger.info(f"rebuild xml_file response : {response} ")
             if response:
@@ -219,6 +226,8 @@ class Processor:
 
     def process(self, input_file):
         logger.info(f"processing Main file : {input_file}")
+        self.input_file=input_file
+
         default_exceptions = Exception
         processes = [
             (self.check_virustotal, default_exceptions),

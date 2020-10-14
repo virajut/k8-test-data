@@ -19,7 +19,7 @@ def create_app():
             logger.info("Inside publish function")
             data = request.json
             """
-            To do process file 
+            To publish file in rabbit mq and call receiver 
             """
             file_name = data.get("file_name", None)
             bucket_name = data.get("bucket_name", None)

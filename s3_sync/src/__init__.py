@@ -41,7 +41,7 @@ def create_app():
         s3_client = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
         try:
             # bucket_name=file_to_fetch['s3_bucket'], # use later
-            s3_client.upload_file(file_path=file_from_minio, file_name=file_to_fetch['file'])
+            s3_client.upload_file(file_path=file_from_minio, file_name=file_to_fetch['file'], bucket=file_to_fetch['s3_bucket'])
         except Exception as err:
             logger.error(f'create_app: s3_client {err}')
             return validation_error(str(err))

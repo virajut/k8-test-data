@@ -78,9 +78,9 @@ Malware Public Repositories ( Proceed with caution when handling live malware) :
 Public malware reference - https://cyberlab.pacific.edu/resources/malware-samples-for-students
 Note :  http://contagiodump.blogspot.com/ in above public reference not implemented since it is paid service and password for malware zip is not availble
 
-### Build
+## Build
 
-* Set .env file in each service
+* Set .env file in each service(refer env.zip)
 
 `docker build -t rabbit-mq:1.0 rabbitmq`
 
@@ -92,15 +92,15 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 `docker build -t glasswall-rebuild  glasswall_rebuild`
 
-`docker build -t k8-s3-sync  s3_sync`
+`docker build -t k8-s3-sync s3_sync`
 
 `docker build -t storage:1.0 storage`
 
 
-### Run
+## Run
 
 `docker-compose up`
 
-### Run security check
+## Run security check
 
 `python3 -m bandit --skip B605 -ll -r .`
