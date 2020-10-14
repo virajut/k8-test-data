@@ -19,7 +19,7 @@ class VirusShareScraper(Scraper):
     """
         virus share api https://virusshare.com/apiv2/
         hash url https://virusshare.com/hashfiles/unpacked_hashes.md5
-        Get the malware url using hashes and api and send it to storage
+        Get the virus share url using hashes and api and send it to storage
     """
     name = 'virusshare'
     # Allow duplicate url request (we will be crawling "page 1" twice)
@@ -51,7 +51,7 @@ class VirusShareScraper(Scraper):
             for _hash in hashes:
                 yield scrapy.Request(url=self.base_url, callback=self.parser, meta={'hash': _hash})
         except Exception as error:
-            logger.error(f"MalShareScraper:start_requests: {error}")
+            logger.error(f"VirusShareScraper:start_requests: {error}")
             raise error
 
     def parser(self, response):
