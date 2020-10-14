@@ -28,7 +28,7 @@ class VirusShareScraper(Scraper):
         'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
         'CONCURRENT_REQUESTS': 1,
         'CONCURRENT_REQUESTS_PER_DOMAIN' : 1,
-        'DOWNLOAD_DELAY': 15,
+        'DOWNLOAD_DELAY': 16,
 
     }
 
@@ -64,7 +64,7 @@ class VirusShareScraper(Scraper):
                 url = self.url.format(self.request_mode, self.api_key, response.meta['hash'])
                 file_details_url = self.url.format("file", self.api_key, response.meta['hash'])
                 details = VirusShareScraper.get(file_details_url)
-                time.sleep(15)
+                time.sleep(16)
                 loader = ItemLoader(item=MaliciousFileCrawlerItem())
                 if details.status_code==200 :
                     json_str = details.content
