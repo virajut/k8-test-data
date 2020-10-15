@@ -11,17 +11,16 @@ class Config(object):
     download_path = "download/"
     upload_path = "upload/"
 
-    S3_URL = os.environ["S3_ENDPOINT"]
-    S3_ACCESS_KEY = os.environ["S3_ACCESS_KEY_ID"]
-    S3_SECRET_KEY = os.environ["S3_SECRET_ACCESS_KEY"]
-    S3_REGION = os.environ["S3_REGION"]
+    S3_URL = os.environ.get("S3_ENDPOINT",None)
+    S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY_ID",None)
+    S3_SECRET_KEY = os.environ.get("S3_SECRET_ACCESS_KEY",None)
+    S3_REGION = os.environ.get("S3_REGION",None)
 
-    SOURCE_S3_BUCKET = os.environ["SOURCE_S3_BUCKET"]
-    TARGET_S3_BUCKET = os.environ["TARGET_S3_BUCKET"]
+    SOURCE_S3_BUCKET = os.environ.get("SOURCE_S3_BUCKET",None)
+    TARGET_S3_BUCKET = os.environ.get("TARGET_S3_BUCKET",None)
 
     NUM_OF_FILES = int(os.environ["NUM_OF_FILES"])
 
-    Allowed_types = ["doc", "dot", "xls", "xlt", "xlm", "ppt", "pot", "pps", "docx", "dotz", "docm", "dotm", "xlsx",
-                     "xltx", "xlsm", "xltm", "pptx", "potx", "ppsx", "pptm", "potm", "ppsm", "pdf", "jpeg", "jpg",
-                     "jpe",
-                     "png", "gif"]
+    MINIO_URL = os.environ.get("MINIO_URL",None)
+    MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY",None)
+    MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY",None)

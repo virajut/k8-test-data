@@ -5,12 +5,14 @@ import shutil
 from src.config import Config
 from src.utils.compress import Compress
 from src.utils.s3_client import S3Client
+from src.utils.minio_service import MinioService
 
 logger.basicConfig(level=logger.INFO)
 
-
 class Process:
     def __init__(self):
+        self.minio_client = MinioService(url=Config.MINIO_URL, access_key=Config.MINIO_ACCESS_KEY,
+                                                       secret_key=Config.MINIO_SECRET_KEY)
         self.s3_client = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
         self.num_of_files = Config.NUM_OF_FILES
 
@@ -87,7 +89,8 @@ if __name__ == "__main__":
             os.makedirs(Config.upload_path)
 
         process = Process()
-        process.s3_client.download_files(Config.SOURCE_S3_BUCKET, process.num_of_files)
+        #process.s3_client.download_files(Config.SOURCE_S3_BUCKET, process.num_of_files)
+        process.minio_client.download_n_files(num_of_files=process.num_of_files)
     except Exception as err:
         logger.error(f'Main : dwonlaod error : {err}')
         raise Exception(f'Main:Error while downloading files {err}')
