@@ -28,14 +28,8 @@ services:
         - 5008:5008
       links:
         - minio
-
       depends_on:
         - minio
-
-
-
-
-
 
 volumes:
   data1-1: 

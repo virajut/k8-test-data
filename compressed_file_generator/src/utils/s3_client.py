@@ -66,7 +66,6 @@ class S3Client:
                     if saved_files == num_files:
                         break
                 except Exception as ex:
-                    print(ex)
                     continue
             return files_list
         except ClientError as e:
