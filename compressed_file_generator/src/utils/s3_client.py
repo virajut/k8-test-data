@@ -20,6 +20,7 @@ class S3Client:
             aws_secret_access_key=secret_key,
             config=Config(signature_version="s3v4", s3={'addressing_style': 'virtual'}),
         )
+        self.not_allowed_types = ["zip", "7z", "rar", "tar", "gz"]
 
     def upload_file(self, file_path, file_name, bucket):
         try:
@@ -47,7 +48,6 @@ class S3Client:
 
     def download_files(self, bucket_name, num_files):
         try:
-            not_allowed_types = ["zip", "7z", "rar", "tar", "gz"]
             file_path = AppConfig.download_path
             logger.info("Check if the Bucket {} exists".format(bucket_name))
             if self.s3.Bucket(bucket_name) not in self.s3.buckets.all():
@@ -59,7 +59,7 @@ class S3Client:
 
                 try:
                     path, filename = os.path.split(files.key)
-                    if not filename.split(".")[-1] in not_allowed_types:
+                    if not filename.split(".")[-1] in self.not_allowed_types:
                         logger.info(f"downloading file : {files.key}")
                         obj_file = file_path + filename
                         logger.info("Downloading file {}.".format(filename))
