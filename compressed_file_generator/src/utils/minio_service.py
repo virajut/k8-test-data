@@ -14,6 +14,7 @@ class MinioService:
         self.url = url
         self.minio_client = Minio(endpoint=url, access_key=access_key,
                                   secret_key=secret_key, secure=False)
+        self.not_allowed_types = ["zip", "7z", "rar", "tar", "gz"]
 
     def download_files(self, bucket_name, file_name, download_path):
         try:
@@ -64,7 +65,7 @@ class MinioService:
                 objects = self.list_objects(bucket)
                 for object in objects:
                     count = count + 1
-                    if not object.split(".")[-1] in "zip":
+                    if not object.split(".")[-1] in self.not_allowed_types :
                         logger.info(f'object name : {object} ')
                         self.download_files(bucket_name=bucket, file_name=object,
                                                          download_path=Config.download_path)
