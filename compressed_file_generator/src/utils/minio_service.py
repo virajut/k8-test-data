@@ -48,15 +48,18 @@ class MinioService:
             count = 0
             objects = self.minio_client.list_objects(bucket_name=bucket_name)
             for object in objects:
-                path = download_path + "/" + object.object_name
-                self.minio_client.fget_object(bucket_name=bucket_name, object_name=object.object_name, file_path=path)
-                count = count + 1
                 if count == num_of_files:
+                    print("kksksksksk")
                     break
+                if not object.object_name.split(".")[-1] =="zip":
+                    print(count)
+                    path = download_path + "/" + object.object_name
+                    self.minio_client.fget_object(bucket_name=bucket_name, object_name=object.object_name, file_path=path)
+                    count = count + 1
+
         except Exception as e:
             logger.error(e)
             raise e
-
 
     def list_buckets(self):
         try:
@@ -67,8 +70,18 @@ class MinioService:
             return list
 
         except Exception as e:
-            logger.error(f'Minio_service: download_files : {e} ')
+            logger.error(f'Minio_service: download_files : {e}')
 
+    def list_objects(self,bucket_name):
+        try:
+            list = []
+            objects = self.minio_client.list_objects(bucket_name=bucket_name)
+            for object in objects:
+                list.append(object.object_name)
+            return list
+
+        except Exception as e:
+            logger.error(f'Minio_service: download_files : {e}')
 
 
 
