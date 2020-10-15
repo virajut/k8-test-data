@@ -1,7 +1,7 @@
 #k8-test-data
 
 # Release 0.3
-## Date : 14/10/2020 [github commit link]()
+## Date : 14/10/2020 [github commit link](https://github.com/k8-proxy/k8-test-data/commit/1f4ec83730357d62e80d494eb12b54a52c1f1c44)
            
 
 * Integration of Distribution Api , GW_crawler , Storage , Rabbit mq , glass_rebuild , file processor and s3 sync modules
@@ -28,13 +28,19 @@
 
 * Configaration ELK for logging
 
-* Batch processing
+* Batch processing of crawler
 
 * Reaching 4million target
 
 * Testing the code for large data
 
 * Completing pending SOW tickets
+
+* Data persistance
+
+* Multilevel compressed test file with malicious content.
+
+* Test files with different type of supported compression Zip, 7z, gz, tar, rar.
 
 
 # Release 0.2
