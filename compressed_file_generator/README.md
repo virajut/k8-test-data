@@ -12,7 +12,5 @@
 
 ##To run
 
-    `docker-compose up -d minio`
-
-    `docker-compose up compressed-file-generator`
+    `docker run --env-file .env compressed-file-generator`
 

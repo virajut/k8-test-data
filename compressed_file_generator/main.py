@@ -3,7 +3,6 @@ import os
 import shutil
 
 from src.config import Config
-from src.utils import minio_service
 from src.utils.compress import Compress
 from src.utils.s3_client import S3Client
 
@@ -12,35 +11,8 @@ logger.basicConfig(level=logger.INFO)
 
 class Process:
     def __init__(self):
-        self.minio_client = minio_service.MinioService(url=Config.MINIO_URL, access_key=Config.MINIO_ACCESS_KEY,
-                                                       secret_key=Config.MINIO_SECRET_KEY)
-
         self.s3_client = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
-        self.num_of_files=Config.NUM_OF_FILES
-
-    def download_n_files(self, num_of_files):
-        try:
-            count = 0
-            bucket_list = self.minio_client.list_buckets()
-            for bucket in bucket_list:
-                logger.info(f'bucker_name : {bucket} ')
-                objects = self.minio_client.list_objects(bucket)
-                for object in objects:
-
-                    count = count + 1
-                    if not object.split(".")[-1]=="zip":
-                        logger.info(f'object name : {object} ')
-                        self.minio_client.download_files(bucket_name=bucket, file_name=object,
-                                                     download_path=Config.download_path)
-                if count == num_of_files:
-                    logger.info(f'downloaded {num_of_files} files')
-                    break
-            if count < num_of_files:
-                logger.info("Not enough files in minio")
-
-        except Exception as err:
-            logger.error(f'Process:download_n_files: error {err}')
-            raise err
+        self.num_of_files = Config.NUM_OF_FILES
 
     def compress_and_upload(self, file_path, file_name):
         target = Config.upload_path
@@ -80,10 +52,10 @@ class Process:
             gz_name = Compress.gz_compresstion(target, file_name, file_path)
             bucket_name = 'gz'
             try:
-                name,ext=file_path.split("/")[-1].split(".")
+                name, ext = file_path.split("/")[-1].split(".")
             except:
-                ext='txt'
-            target_file_path = target + file_name + '.' + ext + "."+ bucket_name
+                ext = 'txt'
+            target_file_path = target + file_name + '.' + ext + "." + bucket_name
             self.s3_client.upload_file(file_path=target_file_path, file_name=gz_name, bucket=bucket_name)
         except Exception as err:
             logger.error(f'Process:compress_and_upload: .gz error {err}')
@@ -102,27 +74,33 @@ class Process:
 
 if __name__ == "__main__":
 
-
     try:
         if not os.path.exists(Config.download_path):
             os.makedirs(Config.download_path)
+        else:
+            shutil.rmtree(Config.download_path)
+            os.makedirs(Config.download_path)
         if not os.path.exists(Config.upload_path):
             os.makedirs(Config.upload_path)
+        else:
+            shutil.rmtree(Config.upload_path)
+            os.makedirs(Config.upload_path)
+
         process = Process()
-        process.download_n_files(num_of_files=process.num_of_files)
+        process.s3_client.download_files(Config.SOURCE_S3_BUCKET, process.num_of_files)
     except Exception as err:
-        logger.error(f'Main : minio_dwonlaod error : {err}')
-        raise Exception(f'Main:Error while downloading files from minio {err}')
+        logger.error(f'Main : dwonlaod error : {err}')
+        raise Exception(f'Main:Error while downloading files {err}')
 
     files = []
     _files = os.listdir(Config.download_path)
 
     if not _files:
-        logger.error("no file inside minio")
+        logger.error("file of required file type not present inside the bucket")
     else:
         try:
             for f in _files:
-                if os.path.isfile(Config.download_path+f):
+                if os.path.isfile(Config.download_path + f):
                     file_path = Config.download_path + f
                     file_name = f.split(".")[0]
                     process.compress_and_upload(file_path=file_path, file_name=file_name)
