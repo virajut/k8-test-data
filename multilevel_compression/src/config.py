@@ -9,7 +9,11 @@ class Config(object):
     DEBUG = True
     download_path = "/usr/src/app/download/"
 
+<<<<<<< HEAD
     COMPRESSION_LEVEL = os.environ["COMPRESSION_DEPTH"]
+=======
+    COMPRESSION_LEVEL = 5
+>>>>>>> 25612eebb4d317bbb31e9c4280aff364ad30c300
     LOCAL_REPO_PATH = os.path.join(os.getcwd(), 'multilevel_folder')
     if not os.path.exists(LOCAL_REPO_PATH):
         os.mkdir(LOCAL_REPO_PATH)
