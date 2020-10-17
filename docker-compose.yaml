@@ -107,19 +107,6 @@ services:
     ports:
       - 5003:5003
 
-  k8-s3-sync:
-    image: k8-s3-sync
-    env_file:
-      - s3_sync/.env
-    build:
-      context: .
-      dockerfile: s3-sync/Dockerfile
-    ports:
-      - 5004:5004
-    links:
-      - minio
-    depends_on:
-      - minio
 
   postgres:
     image: postgres
@@ -131,6 +118,22 @@ services:
       - ./db/postgres:/var/lib/postgresql/data
     ports:
      - 5432:5432
+
+  k8-s3-sync:
+    image: k8-s3-sync
+    env_file:
+      - s3_sync/.env
+    build:
+      context: .
+      dockerfile: s3-sync/Dockerfile
+    ports:
+      - 5004:5004
+    links:
+      - minio
+      - postgres
+    depends_on:
+      - minio
+      - postgres
 
 volumes:
   data1-1: 

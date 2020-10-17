@@ -32,8 +32,11 @@ db.session.commit()
 
 def add_to_db(filename, path):
     f = File(filename = filename, path = path)
-    db.session.add(f)
-    db.session.commit()
+    try:
+        db.session.add(f)
+        db.session.commit()
+    except Exception as ex:
+        logger.error(str(ex))
 
 
 @app.route("/tos3", methods=["POST"])
