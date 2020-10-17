@@ -90,3 +90,22 @@ def get_files():
             })
     return jsonify({"files": output})
 
+
+@app.route("/sync_from_s3", methods=["GET"])
+def sync_from_s3():
+    s3_client = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
+    file_type = request.args.get("file_type", None)
+    if not file_type:
+        return jsonify({"message":"invalid file_type"})
+
+    files = s3_client.get_files(file_type)
+    if files:
+        files = files.get('Contents', [])
+        for file in files:
+            # print(file['Key'])
+            filename = file['Key'].split("/")[-1]
+            add_to_db(filename=filename, path=file_type)
+
+    return jsonify({})
+
+
