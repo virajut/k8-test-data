@@ -18,10 +18,10 @@ spec:
     spec:
       containers:
       - name: s3-sync-pod
-        image: karthyuom/k8-s3-sync:1.0
+        image: karthyuom/k8-s3-sync:1.0 #TODO: To be updated based on the docker registry and the image version
         stdin: true
         tty: true
-        env:
+        env: #TODO: Update the below settings when necessary
         - name: PYTHONUNBUFFERED
           value: "0"
         - name: MINIO_URL
@@ -33,11 +33,11 @@ spec:
         - name: "S3_ENDPOINT"
           value: "https://s3.ca-central-1.amazonaws.com/"
         - name: "S3_ACCESS_KEY_ID"
-          value: "AKIAYTK4TFTHGBAPXENO"
+          value: ""
         - name: "S3_SECRET_ACCESS_KEY"
-          value: "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"
+          value: ""
         - name: "S3_REGION"
-          value: "ca-central-1"
+          value: ""
         - name: "S3_BUCKET"
           value: "k8-test-data-s3"
 ---
