@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: glasswall-rebuild-pod
-        image: karthyuom/glasswall-rebuild
+        image: karthyuom/glasswall-rebuild #TODO: To be updated based on the docker registry and the image version
         ports:
         - containerPort: 5003
           protocol: TCP

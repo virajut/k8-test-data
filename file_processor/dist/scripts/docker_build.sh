@@ -1,5 +1,8 @@
 #!/bin/sh
 
-docker build -t karthyuom/k8-file-processor:1.0.22 -f ../../Dockerfile ../../
+DOCKER_REGISTRY=karthyuom
+DOCKER_VERSION=1.0.22
 
-docker push karthyuom/k8-file-processor:1.0.22
+docker build -t $DOCKER_REGISTRY/k8-file-processor:$DOCKER_VERSION -f ../../Dockerfile ../../
+
+docker push $DOCKER_REGISTRY/k8-file-processor:$DOCKER_VERSION

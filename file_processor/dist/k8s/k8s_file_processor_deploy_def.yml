@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
       - name: file-processor-pod
-        image: karthyuom/k8-file-processor:1.0.22
-        env:
+        image: karthyuom/k8-file-processor:1.0.22 #TODO: To be updated based on the docker registry and the image version
+        env: #TODO: Update the below settings when necessary
         - name: MQ_HOST
           value: rabbitmq
         - name: MQ_QUEUE
@@ -37,7 +37,7 @@ spec:
         - name: virustotal_url
           value: https://www.virustotal.com/vtapi/v2/
         - name: virustotal_key
-          value: "f0253dca5f1f4c3188e111a8bec45d6ada60d865b5f2b5e3cf1958c3ae5e3fba"
+          value: ""
         - name: "s3_sync_api"
           value: "http://s3-sync-svc.k8-test-data.svc.cluster.local:5004/tos3"
         - name: "rebuild_api"

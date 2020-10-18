@@ -1,5 +1,8 @@
 #!/bin/sh
 
-docker build -t karthyuom/glasswall-rebuild -f ../../Dockerfile ../../
+DOCKER_REGISTRY=karthyuom
+DOCKER_VERSION=1.0
 
-docker push karthyuom/glasswall-rebuild
+docker build -t $DOCKER_REGISTRY/glasswall-rebuild -f ../../Dockerfile ../../
+
+docker push $DOCKER_REGISTRY/glasswall-rebuild
