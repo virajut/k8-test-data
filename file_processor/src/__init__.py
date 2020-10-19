@@ -122,6 +122,7 @@ class Processor:
                 if minio_meta:
                     if 'x-amz-meta-url' in minio_meta.metadata:
                         meta['url'] = minio_meta.metadata['x-amz-meta-url']
+
                 meta['virus_total_status'] = self.virus_total_status
                 meta['gw_rebuild_xml_status'] = self.gw_rebuild_xml_status
                 meta['gw_rebuild_file_status'] = self.gw_rebuild_file_status
@@ -212,7 +213,7 @@ class Processor:
 
     def send_mq(self):
         try:
-            logger.info("sending file to rabbitmq for s3 sync")
+            logger.info("sending file to rabbitmq for s3 sync, %s" % self.directory)
             name = self.directory.split("/")[-1]
             payload = {
                 "s3_bucket": self.ext,

@@ -121,6 +121,17 @@ services:
     depends_on:
       - minio
 
+  gov-uk-migration:
+    image: gov-uk-migration
+    build:
+      context: .
+      dockerfile: gov_uk_file_migration/Dockerfile
+    env_file:
+      - gov_uk_file_migration/.env
+    depends_on:
+      - minio
+      - k8-file-processor
+
 volumes:
-  data1-1: 
+  data1-1:
   
