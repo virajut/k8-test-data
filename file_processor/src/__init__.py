@@ -103,15 +103,17 @@ class Processor:
                         count = 0
                         break
                     count=count+1
-                    time.sleep(100)
+                    time.sleep(60)
                     report = self.vt.file_report([resp['json_resp']['resource']])
                     logger.info(f"VIRUSTOTAL REPORT after retrying {self.file_path} {report}")
 
             elif report["status_code"] == 200:
-                self.virus_total_status = True
-                vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
-                with open(vt_file_name, "w") as fp:
-                    fp.write(str(report))
+                logger.info(f'check_virustotal : response_code : {report["json_resp"]["response_code"]}')
+                if report["json_resp"]["response_code"]==1:
+                    self.virus_total_status = True
+                    vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
+                    with open(vt_file_name, "w") as fp:
+                        fp.write(str(report))
 
             logger.info(f"VIRUS TOTAL REPORT {report}")
             logger.info(
