@@ -5,7 +5,7 @@
 
 ## Build
 
-    `To build the Docker image and name it `multilevel-compression` 
+    `To build the Docker image and name it `gov-uk-migration` 
 
     `docker build -t gov-uk-migration .`
 

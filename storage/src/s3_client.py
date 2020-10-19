@@ -5,6 +5,8 @@ import boto3
 import logging
 from botocore.client import Config
 from botocore.exceptions import ClientError
+from flask import send_from_directory
+
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.config import Config as AppConfig
@@ -24,7 +26,33 @@ class S3Client:
             config=Config(signature_version="s3v4", s3={'addressing_style': 'virtual'}),
         )
 
+    def list_s3_bucket_files(self, bucket_name, sub_dir):
 
+        file_list = []
+        if self.s3.Bucket(bucket_name) not in self.s3.buckets.all():
+            raise Exception(f"{bucket_name} bucket does not exist")
+        bucket = self.s3.Bucket(bucket_name)
+        bucket_file_list = bucket.objects.filter(Prefix=sub_dir)
+
+        for file in bucket_file_list:
+            file_list.append(file.key)
+
+        return file_list
+
+    def download_single_s3_file(self, bucket_name, file_key, file_name):
+
+        bucket = self.s3.Bucket(bucket_name)
+        try:
+            file_download_obj = bucket.download_file(file_key,
+                                                     os.path.join(Config.s3_download_path,
+                                                                  file_name))
+            logger.info(file_download_obj)
+
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+        return 1
 
     def upload_file(self, file_path, file_name, bucket):
         print("uploading", file_name, file_path)
@@ -107,12 +135,13 @@ class S3Client:
                     saved_files += 1
 
                     if saved_files == num_files:
+                        yield obj_file
                         break
+                    yield obj_file
 
                 except Exception as ex:
                     continue
-            return files_list
-
+            # return files_list
         except ClientError as e:
             logger.error(
                 "Cannot Connect to the Minio {}. Please Verify your credentials.".format(
