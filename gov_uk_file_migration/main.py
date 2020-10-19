@@ -2,8 +2,8 @@ import os
 import logging
 import requests
 from minio import Minio
-from .src.config import Config
-from .src.utils.s3_client import S3Client
+from src.config import Config
+from src.utils.s3_client import S3Client
 
 logger = logging.getLogger("GW:s3")
 
@@ -17,25 +17,24 @@ class GovUKFileMigration:
         self.s3 = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
         logger.info("GovUKFileMigration::__init__ Creating s3 client object: %s" % self.s3)
         self.download_dir = Config.LOCAL_REPO_PATH
+        self.n_files_to_fetch = float('inf')
+        self.file_obj = self.s3.download_subdirectory_files(Config.S3_BUCKET, Config.S3_SUB_FOLDER_PREFIX,
+                                                            self.n_files_to_fetch,
+                                                            file_download_path=self.download_dir)
 
-    def get_files(self):
+    def get_file(self):
 
-        # number of files to download
-        n_files_to_fetch = 100  # to be changed to float('inf') to fetch all files
-
-        # download files from s3 bucket using s3client
+        # download files from s3 bucket using s3client generator method
         try:
-            list_files = self.s3.download_subdirectory_files(Config.S3_BUCKET, Config.S3_SUB_FOLDER_PREFIX,
-                                                             n_files_to_fetch, file_download_path=self.download_dir)
-            logger.info("GovUKFileMigration::get_files "
-                        "Downloaded {} files from s3: {}".format(n_files_to_fetch,
-                                                                 list_files))
+            file_obj = next(self.file_obj)
+            logger.info("GovUKFileMigration::get_file "
+                        "Downloaded file {} from s3.".format(file_obj))
         except Exception as e:
-            logger.info("GovUKFileMigration::get_files Got error {} "
+            logger.info("GovUKFileMigration::get_file Got error {} "
                         "while downloading files from {}.".format(e, Config.S3_BUCKET))
             return -1
 
-        return list_files
+        return file_obj
 
     @staticmethod
     def get_bucket_name(path):
@@ -51,32 +50,27 @@ class GovUKFileMigration:
 
         return bucket_name
 
-    def preprocess_files(self, files):
+    def preprocess_files(self, file):
 
-        files = sorted(files)
+        # 1. extract meta data of the file
+        bucket_name = GovUKFileMigration.get_bucket_name(file)
+        file_name = file.split('/')[-1]
 
-        # 1. traverse each file and pass it to file processor
-        for file in files:
+        logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
+                    " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
 
-            # 2. extract meta data
-            bucket_name = GovUKFileMigration.get_bucket_name(file)
-            file_name = file.split('/')[-1]
+        try:
+            # 2. upload the file to minio before passing it to processor.
+            GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name)
+        except Exception as e:
+            logger.info("GovUKFileMigration::preprocess_files Got error {} "
+                        "while uploading to minio.".format(e))
+            raise e
 
-            logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
-                        " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
-
-            try:
-                # 3. upload the file to minio before passing it to processor.
-                GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name)
-            except Exception as e:
-                logger.info("GovUKFileMigration::preprocess_files Got error {} "
-                            "while uploading to minio." % e)
-                raise e
-
-            # call file processor service
-            processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
-            logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
-                        "file %s and bucket name %s" % (processor_response, file, bucket_name))
+        # 3. pass received file to file processor
+        processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
+        logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
+                    "file %s and bucket name %s" % (processor_response, file, bucket_name))
 
     @staticmethod
     def upload_to_minio(bucket_name, file_name, file_path):
@@ -129,11 +123,15 @@ if __name__ == '__main__':
     migration_obj = GovUKFileMigration()
 
     # fetch files
-    s3_files = migration_obj.get_files()
-    logger.info("GovUKFileMigration::__main__ Files from gov-uk bucket: {}".format(s3_files))
+    s3_file = float('inf')  # this will be used to stop fetching file from the file download generator
+    while s3_file != -1:
+        # keep fetching files from file generator unless iterator is exhausted: -1
+        s3_file = migration_obj.get_file()
+        logger.info("GovUKFileMigration::__main__ Files from gov-uk bucket: {}".format(s3_file))
 
-    # send files for processing through the k8-test-data standard processing
-    migration_obj.preprocess_files(s3_files)
+        # send files for processing through the k8-test-data standard processing
+        if s3_file != -1:
+            migration_obj.preprocess_files(s3_file)
 
 
 

@@ -95,7 +95,7 @@ class S3Client:
             files_list = []
             saved_files = 0
             for files in bucket.objects.filter(Prefix=subdir):
-                print(files)
+                # print(files)
                 try:
                     path, filename = os.path.split(files.key)
                     obj_file = file_path + filename
@@ -103,11 +103,15 @@ class S3Client:
                     bucket.download_file(files.key, obj_file)
                     files_list.append(obj_file)
                     saved_files += 1
+
                     if saved_files == num_files:
+                        yield obj_file
                         break
+                    yield obj_file
+
                 except Exception as ex:
                     continue
-            return files_list
+            # return files_list
         except ClientError as e:
             logger.error(
                 "Cannot Connect to the Minio {}. Please Verify your credentials.".format(
