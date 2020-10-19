@@ -2,6 +2,7 @@ import hashlib
 import logging as logger
 import os
 import zipfile
+import time
 from os.path import basename
 from pathlib import Path
 
@@ -91,16 +92,31 @@ class Processor:
     def check_virustotal(self):
         try:
             logger.info("checking malicious with VirusTotal")
+            time.sleep(30)
             resp = self.vt.file_scan(self.file_path)
-            logger.info(
-                f"Processor : check_virustotal report status: {resp['status_code']}"
-            )
-            if resp["status_code"] == 200:
-                # print("resp", resp)
+            time.sleep(30)
+            report = self.vt.file_report([resp['json_resp']['resource']])
+            if report["status_code"] == 204:
+                count=0
+                while report["status_code"] == 204:
+                    if count==3:
+                        count = 0
+                        break
+                    count=count+1
+                    time.sleep(100)
+                    report = self.vt.file_report([resp['json_resp']['resource']])
+                    logger.info(f"VIRUSTOTAL REPORT after retrying {self.file_path} {report}")
+
+            elif report["status_code"] == 200:
                 self.virus_total_status = True
                 vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
                 with open(vt_file_name, "w") as fp:
-                    fp.write(str(resp))
+                    fp.write(str(report))
+
+            logger.info(f"VIRUS TOTAL REPORT {report}")
+            logger.info(
+                f"Processor : check_virustotal report status: {report['status_code']}"
+            )
 
         except Exception as e:
             logger.error(f"Processor : check_virustotal error: {e}")
@@ -157,6 +173,8 @@ class Processor:
             if response:
                 xml_file = response.content
                 status = response.status_code
+                logger.info(f"status of rebuild {response.status_code}")
+                logger.info(f"status of rebuild {response.content}")
                 if status==200:
                     self.gw_rebuild_xml_status = True
                     with open(
