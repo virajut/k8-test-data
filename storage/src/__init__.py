@@ -3,13 +3,16 @@ import json
 import logging
 import os
 import socket
+import zipfile
 from io import BytesIO
+from os.path import basename
 
 import requests
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify, send_from_directory
 
 from .config import Config
 from .minio_service import MinioService
+from .s3_client import S3Client
 
 logger = logging.getLogger('GW:Storage')
 
@@ -20,6 +23,8 @@ def create_app():
 
     client = MinioService(endpoint=os.environ['MINIO_HOSTNAME'], access_key=os.environ['MINIO_ACCESS_KEY_ID'],
                           secret_key=os.environ['MINIO_SECRET_ACCESS_KEY'], secure=False)
+
+    s3_client = S3Client(os.environ['S3_URL'], os.environ['S3_ACCESS_KEY'], os.environ['S3_SECRET_KEY'] )
 
     def server_info():
         return {"hostname": socket.gethostname()}
@@ -90,5 +95,62 @@ def create_app():
             raise error
 
         return Response(json.dumps(ret), mimetype='application/json')
+
+
+
+    @app.route("/s3_upload", methods=['GET', 'POST'])
+    def upload_file_to_s3():
+        try:
+            content = request.json
+            file = request.files.get("file")
+            if not file:
+                return jsonify({"message": "please supply a file"})
+            s3_client.upload_file(file=file,file_name=content['file_name'],bucket=content['bucket_name'])
+            ret = {"err": "none", 'details': content}
+        except Exception as error:
+            ret = {"err": "none", "details": error}
+            raise error
+
+        return Response(json.dumps(ret), mimetype='application/json')
+
+    @app.route("/s3_download/<path:path>", methods=['GET', 'POST'])
+    def download_files_from_s3(path):
+        try:
+            content = request.json
+            s3_client.download_files(bucket_name=content['bucket_name'],num_files=content['num_files'],file_path=Config.s3_download_path)
+
+            with zipfile.ZipFile(Config.s3_upload_path +"/files.zip", "w", zipfile.ZIP_DEFLATED) as zipObj:
+                for folderName, subfolders, filenames in os.walk(Config.s3_download_path):
+                    for filename in filenames:
+                        filePath = os.path.join(folderName, filename)
+                        zipObj.write(filePath, basename(filePath))
+            return send_from_directory(Config.s3_upload_path , path, as_attachment=True)
+
+        except Exception as error:
+            logger.error(f'create_app : download_files_from_s3 : {error}')
+            return None
+
+
+
+
+    @app.route("/s3_download_dir/<path:path>", methods=['GET', 'POST'])
+    def download_dir_file_from_s3(path):
+        try:
+            content = request.json
+            s3_client.download_subdirectory_files(bucket_name=content['bucket_name'],num_files=content['num_files'],file_download_path=Config.s3_download_path)
+
+            with zipfile.ZipFile(Config.s3_upload_path + "/files.zip", "w", zipfile.ZIP_DEFLATED) as zipObj:
+                for folderName, subfolders, filenames in os.walk(Config.s3_download_path):
+                    for filename in filenames:
+                        filePath = os.path.join(folderName, filename)
+                        zipObj.write(filePath, basename(filePath))
+
+            return send_from_directory(Config.s3_upload_path, path, as_attachment=True)
+
+        except Exception as error:
+            logger.error(f'create_app : download_dir_file_from_s3 : {error}')
+            return None
+
+
 
     return app
