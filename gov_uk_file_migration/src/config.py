@@ -26,7 +26,7 @@ class Config(object):
     MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
     MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
 
-    S3_LIST_BUCKET_FILES_URL = "http://localhost:5002/list_bucket_files"
-    S3_FILE_DOWNLOAD_URL = "http://localhost:5002/s3_file_download"
+    S3_LIST_BUCKET_FILES_URL = os.environ["S3_LIST_BUCKET_FILES_URL"]
+    S3_FILE_DOWNLOAD_URL = os.environ["S3_FILE_DOWNLOAD_URL"]
 
 

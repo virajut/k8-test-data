@@ -39,35 +39,35 @@ services:
       - 50052:50052
       - 5005:5002
 
-#  glasswall-crawler:
-#    image: glasswallcrawler:1.0
-#    build:
-#      context: .
-#      dockerfile: gw_crawler/Dockerfile
-#    env_file:
-#      - gw_crawler/.env
-#    ports:
-#      - 5002:5000
-#    depends_on:
-#      - minio
-#      - rabbitmq
-#
-#  rabbitmq-process:
-#    image: rabbit-mq:1.0
-#    build:
-#      context: .
-#      dockerfile: rabbitmq/Dockerfile
-#    env_file:
-#      - rabbitmq/.env
-#    ports:
-#      - 50057:50057
-#      - 5006:5006
-#    restart: on-failure
-#    depends_on:
-#      - rabbitmq
-#      - minio
-#    links:
-#      - rabbitmq
+  glasswall-crawler:
+    image: glasswallcrawler:1.0
+    build:
+      context: .
+      dockerfile: gw_crawler/Dockerfile
+    env_file:
+      - gw_crawler/.env
+    ports:
+      - 5002:5000
+    depends_on:
+      - minio
+      - rabbitmq
+
+  rabbitmq-process:
+    image: rabbit-mq:1.0
+    build:
+      context: .
+      dockerfile: rabbitmq/Dockerfile
+    env_file:
+      - rabbitmq/.env
+    ports:
+      - 50057:50057
+      - 5006:5006
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - minio
+    links:
+      - rabbitmq
 
   k8-file-distribution:
     image: k8-file-distribution
@@ -121,16 +121,16 @@ services:
     depends_on:
       - minio
 
-#  gov-uk-migration:
-#    image: gov-uk-migration
-#    build:
-#      context: .
-#      dockerfile: gov_uk_file_migration/Dockerfile
-#    env_file:
-#      - gov_uk_file_migration/.env
-#    depends_on:
-#      - minio
-#      - k8-file-processor
+  gov-uk-migration:
+    image: gov-uk-migration
+    build:
+      context: .
+      dockerfile: gov_uk_file_migration/Dockerfile
+    env_file:
+      - gov_uk_file_migration/.env
+    depends_on:
+      - minio
+      - k8-file-processor
 
 volumes:
   data1-1:

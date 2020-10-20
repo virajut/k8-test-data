@@ -3,8 +3,8 @@ import json
 import logging
 import requests
 from minio import Minio
-from .src.config import Config
-from .src.utils.s3_client import S3Client
+from src.config import Config
+from src.utils.s3_client import S3Client
 
 logger = logging.getLogger("GW:s3")
 
@@ -27,12 +27,10 @@ class GovUKFileMigration:
                                                   "bucket_name": Config.S3_BUCKET,
                                                   "sub_dir": Config.S3_SUB_FOLDER_PREFIX
                                               })
-            # print(s3_client_obj.content)
 
             result = s3_bucket_list_obj.json()
-            # print(result, type(result))
             file_list = json.loads(result)["file_list"]
-            # print(file_list)
+
         except Exception as e:
             logger.error("get_file_list Got error while calling storage s3 client service, %s" % e)
             raise e
@@ -43,7 +41,6 @@ class GovUKFileMigration:
 
         try:
             # download files from s3 bucket using s3client generator method
-            print("filename:", file_name, "filekey: ", file_key)
             s3_file_download_obj = requests.get(Config.S3_FILE_DOWNLOAD_URL,
                                                 params={
                                                     "bucket_name": Config.S3_BUCKET,
@@ -58,6 +55,7 @@ class GovUKFileMigration:
 
             logger.info("GovUKFileMigration::get_file "
                         "Downloaded file header from s3.".format(s3_file_download_obj.headers))
+
         except Exception as e:
             logger.info("GovUKFileMigration::get_file Got error {} "
                         "while downloading files from {}.".format(e, Config.S3_BUCKET))
@@ -75,7 +73,7 @@ class GovUKFileMigration:
             file.write(byte_content)
             file.close()
         except Exception as e:
-            logger.error("recreate_file Error: %s" % e)
+            logger.error("GovUKFileMigration::recreate_file Error: %s" % e)
             raise e
 
         # recreate pdf from bytes
@@ -85,8 +83,12 @@ class GovUKFileMigration:
                 file.write(line)
             file.close()
         except Exception as e:
-            logger.error("recreate_file Error: %s" % e)
+            logger.error("GovUKFileMigration::recreate_file Error: %s" % e)
             raise e
+
+        # remove the created byte text file
+        if os.path.exists(byte_file_name):
+            os.remove(byte_file_name)
 
         return downloaded_file_path
 
@@ -179,17 +181,13 @@ if __name__ == '__main__':
     logger.info("GovUKFileMigration::__main__ Number of files from gov-uk bucket: {}".format(len(file_list)))
 
     # iterate over each file and download
-    i=2
     for file_idx in range(1, len(file_list)):
-        print("file:", file_list[file_idx])
-        i-=1
-        if i>0:
-            download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
 
-            # pass the file to file processor as it downloads
-            migration_obj.preprocess_files(download_path)
-        else:
-            break
+        download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
+
+        # pass the file to file processor as it downloads
+        migration_obj.preprocess_files(download_path)
+
 
 
 
