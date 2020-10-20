@@ -121,7 +121,7 @@ if __name__ == "__main__":
     try:
         logger.info(f'Main :Sending file for zipping')
         process.compress_file()
-        logger.info(f'Main : comfression is done')
+        logger.info(f'Main : compression is done')
         logger.info(f'Main : Uploading compressed files to s3')
         process.upload_to_s3()
         logger.info(f'Main : Uploading is done')
