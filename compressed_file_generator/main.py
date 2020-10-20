@@ -1,4 +1,4 @@
-import ast
+import json
 import logging as logger
 import os
 import shutil
@@ -6,14 +6,13 @@ import shutil
 import requests
 from src.config import Config
 from src.utils.compress import Compress
-from src.utils.s3_client import S3Client
 
 logger.basicConfig(level=logger.INFO)
 
 
 class Process:
     def __init__(self):
-        self.s3_client = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
+
         self.num_of_files = Config.NUM_OF_FILES
         self.target = Config.upload_path
         self.server_base_url = os.environ.get('server_base_url')
@@ -40,15 +39,12 @@ class Process:
         except Exception as err:
             logger.info(f"Process : compress : {err}")
 
-
     def upload_s3(self):
         try:
             _files = os.listdir(Config.upload_path)
             for file_name in _files:
                 file = Config.upload_path + file_name
-                print(file)
                 folder_name = file_name.split(".")[-1]
-                print('fddll')
                 payload = {'bucket_name': os.environ["TARGET_S3_BUCKET"], 'folder_name': folder_name}
                 files = {"file": (file_name, open(file, "rb")), }
 
@@ -80,12 +76,16 @@ class Process:
     def download_file_from_minio(self, bucket, file_name):
         try:
             json = {'bucket_name': bucket, "object_name": file_name}
-            response = requests.get(self.server_base_url + "download_from_minio/" + file_name, json=json)
-            content = response.content.decode()
-            f = open(Config.download_path + file_name, "w")
-            f.write(content)
-            f.close()
-            return True
+            response = requests.get(self.server_base_url + "download_from_minio", json=json)
+            logger.info(f'Response : {response.status_code}')
+
+            if response.status_code == 200:
+                f = open(Config.download_path + file_name, "wb")
+                f.write(response.content)
+                f.close()
+                return True
+            else:
+                return False
         except Exception as e:
             logger.error(f'MinioClient : download_file_from_minio : {e} ')
             return False
@@ -93,19 +93,21 @@ class Process:
     def download_n_files_from_minio(self, num_of_files):
         count = 0
         bucket_list = self.list_buckets_from_minio()
-        bucket_list = ast.literal_eval(bucket_list.content.decode())
-        for bucket in bucket_list["list"]:
-            files = self.list_files_from_minio(bucket_name=bucket)
-            file_response = ast.literal_eval(files.content.decode())
-            for f in file_response['list']:
-                if count == num_of_files:
-                    break
-                else:
-                    if not bucket in self.not_allowed_types:
-                        status = self.download_file_from_minio(bucket=bucket, file_name=f)
-                        if status:
-                            print("true")
-                            count = count + 1
+        if bucket_list.status_code == 200:
+            bucket_list = json.loads(bucket_list.content)
+            for bucket in bucket_list["list"]:
+                files = self.list_files_from_minio(bucket_name=bucket)
+                file_response = json.loads(files.content)
+                for f in file_response['list']:
+                    if count == num_of_files:
+                        break
+                    else:
+                        if not bucket in self.not_allowed_types:
+                            logger.info("download_file_from_minio")
+                            status = self.download_file_from_minio(bucket=bucket, file_name=f)
+                            if status:
+                                count = count + 1
+
 
 if __name__ == "__main__":
 
@@ -120,14 +122,13 @@ if __name__ == "__main__":
         process.download_n_files_from_minio(Config.NUM_OF_FILES)
 
     except Exception as err:
-        logger.error(f'Main : dwonlaod error : {err}')
+        logger.error(f'Main : downlaod error : {err}')
         raise Exception(f'Main:Error while downloading files {err}')
 
     try:
         process.compress_file()
-        print("compressed")
+        logger.info(f'Main : comfression is done')
         re = process.upload_s3()
-        print(re)
     except Exception as err:
         logger.error(f'main: compress and upload file error : {err}')
         raise err

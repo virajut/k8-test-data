@@ -3,12 +3,10 @@ import json
 import logging
 import os
 import socket
-import zipfile
 from io import BytesIO
-from os.path import basename
 
 import requests
-from flask import Flask, request, Response, jsonify, send_from_directory, safe_join
+from flask import Flask, request, Response, send_from_directory
 
 from .config import Config
 from .minio_service import MinioService
@@ -16,7 +14,6 @@ from .s3_client import S3Client
 
 logger = logging.getLogger('GW:Storage')
 from dotenv import load_dotenv
-env_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 load_dotenv()
 
 def create_app():
@@ -26,7 +23,7 @@ def create_app():
     client = MinioService(endpoint=os.environ['MINIO_HOSTNAME'], access_key=os.environ['MINIO_ACCESS_KEY_ID'],
                           secret_key=os.environ['MINIO_SECRET_ACCESS_KEY'], secure=False)
 
-    s3_client = S3Client(os.environ['S3_URL'], os.environ['S3_ACCESS_KEY'], os.environ['S3_SECRET_KEY'] )
+    s3_client = S3Client(os.environ['S3_URL'], os.environ['S3_ACCESS_KEY'], os.environ['S3_SECRET_KEY'])
     if not os.path.exists(Config.s3_upload_path):
         os.makedirs(Config.s3_upload_path)
 
@@ -49,7 +46,7 @@ def create_app():
     def list_file():
         try:
             content = request.json
-            file_list=client.get_all_files(bucket_name=content['bucket_name'])
+            file_list = client.get_all_files(bucket_name=content['bucket_name'])
             ret = {"err": "none", 'list': file_list}
         except Exception as error:
             ret = {"err": "Error", }
@@ -57,7 +54,6 @@ def create_app():
             raise error
 
         return Response(json.dumps(ret), mimetype='application/json')
-
 
     @app.route("/list_buckets", methods=['GET', 'POST'])
     def list_buckets():
@@ -75,8 +71,9 @@ def create_app():
     def download_file_from_minio():
         try:
             content = request.json
-            client.download_file(bucket_name=content['bucket_name'],object_name=content['object_name'],file_path=Config.minio_downlaod+"/"+content['object_name'])
-            dir=os.path.join(app.root_path, Config.minio_downlaod)
+            client.download_file(bucket_name=content['bucket_name'], object_name=content['object_name'],
+                                 file_path=Config.minio_downlaod + "/" + content['object_name'])
+            dir = os.path.join(app.root_path, "download")
             return send_from_directory(directory=dir, filename=content['object_name'], as_attachment=True)
         except Exception as error:
             logger.error(f'create_app : download_file_from_minio : {error}')
@@ -85,7 +82,6 @@ def create_app():
     @app.route("/upload", methods=['GET', 'POST'])
     def upload_file():
         try:
-
             content = request.json
             client.upload_file(bucket_name=content['bucket_name'], file_name=content['minio_path'],
                                file_path=content['file'])
@@ -132,7 +128,7 @@ def create_app():
 
         except Exception as error:
             logger.error(f'create_app : upload_stream : {error}')
-            ret = {"err": error }
+            ret = {"err": error}
             raise error
 
         return Response(json.dumps(ret), mimetype='application/json')
@@ -142,17 +138,16 @@ def create_app():
         try:
             content = request.json
             file = request.files.get("file")
-            bucket_name=request.args.get('bucket_name')
-            foler_name=request.args.get('folder_name')
+            bucket_name = request.args.get('bucket_name')
+            foler_name = request.args.get('folder_name')
             file.save(os.path.join(Config.s3_upload_path, file.filename))
 
-            s3_client.upload_file(file=Config.s3_upload_path+"/"+file.filename,file_name=file.filename,bucket=bucket_name,folder=foler_name)
+            s3_client.upload_file(file=Config.s3_upload_path + "/" + file.filename, file_name=file.filename,
+                                  bucket=bucket_name, folder=foler_name)
             ret = {"err": "none", 'details': content}
             return ret
         except Exception as error:
             ret = {"err": "error", "details": error}
             return ret
-
-
 
     return app
