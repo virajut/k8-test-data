@@ -8,14 +8,16 @@ from io import BytesIO
 from os.path import basename
 
 import requests
-from flask import Flask, request, Response, jsonify, send_from_directory
+from flask import Flask, request, Response, jsonify, send_from_directory, safe_join
 
 from .config import Config
 from .minio_service import MinioService
 from .s3_client import S3Client
 
 logger = logging.getLogger('GW:Storage')
-
+from dotenv import load_dotenv
+env_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +27,8 @@ def create_app():
                           secret_key=os.environ['MINIO_SECRET_ACCESS_KEY'], secure=False)
 
     s3_client = S3Client(os.environ['S3_URL'], os.environ['S3_ACCESS_KEY'], os.environ['S3_SECRET_KEY'] )
+    if not os.path.exists(Config.s3_upload_path):
+        os.makedirs(Config.s3_upload_path)
 
     def server_info():
         return {"hostname": socket.gethostname()}
@@ -40,6 +44,43 @@ def create_app():
             data["action"] = "error"
             raise error
         return Response(json.dumps(data), mimetype='application/json')
+
+    @app.route("/list_files", methods=['GET', 'POST'])
+    def list_file():
+        try:
+            content = request.json
+            file_list=client.get_all_files(bucket_name=content['bucket_name'])
+            ret = {"err": "none", 'list': file_list}
+        except Exception as error:
+            ret = {"err": "Error", }
+            logger.error(f'create_app : list_file : {error}')
+            raise error
+
+        return Response(json.dumps(ret), mimetype='application/json')
+
+
+    @app.route("/list_buckets", methods=['GET', 'POST'])
+    def list_buckets():
+        try:
+            list = client.get_bucket_list()
+            ret = {"err": "none", 'list': list}
+        except Exception as error:
+            ret = {"err": "Error", }
+            logger.error(f'create_app : list_buckets : {error}')
+            raise error
+
+        return Response(json.dumps(ret), mimetype='application/json')
+
+    @app.route("/download_from_minio", methods=['GET', 'POST'])
+    def download_file_from_minio():
+        try:
+            content = request.json
+            client.download_file(bucket_name=content['bucket_name'],object_name=content['object_name'],file_path=Config.minio_downlaod+"/"+content['object_name'])
+            dir=os.path.join(app.root_path, Config.minio_downlaod)
+            return send_from_directory(directory=dir, filename=content['object_name'], as_attachment=True)
+        except Exception as error:
+            logger.error(f'create_app : download_file_from_minio : {error}')
+            raise None
 
     @app.route("/upload", methods=['GET', 'POST'])
     def upload_file():
@@ -96,60 +137,21 @@ def create_app():
 
         return Response(json.dumps(ret), mimetype='application/json')
 
-
-
-    @app.route("/s3_upload", methods=['GET', 'POST'])
-    def upload_file_to_s3():
+    @app.route("/upload_to_s3", methods=['GET', 'POST'])
+    def upload_to_s3():
         try:
             content = request.json
             file = request.files.get("file")
-            if not file:
-                return jsonify({"message": "please supply a file"})
-            s3_client.upload_file(file=file,file_name=content['file_name'],bucket=content['bucket_name'])
+            bucket_name=request.args.get('bucket_name')
+            foler_name=request.args.get('folder_name')
+            file.save(os.path.join(Config.s3_upload_path, file.filename))
+
+            s3_client.upload_file(file=Config.s3_upload_path+"/"+file.filename,file_name=file.filename,bucket=bucket_name,folder=foler_name)
             ret = {"err": "none", 'details': content}
+            return ret
         except Exception as error:
-            ret = {"err": "none", "details": error}
-            raise error
-
-        return Response(json.dumps(ret), mimetype='application/json')
-
-    @app.route("/s3_download/<path:path>", methods=['GET', 'POST'])
-    def download_files_from_s3(path):
-        try:
-            content = request.json
-            s3_client.download_files(bucket_name=content['bucket_name'],num_files=content['num_files'],file_path=Config.s3_download_path)
-
-            with zipfile.ZipFile(Config.s3_upload_path +"/files.zip", "w", zipfile.ZIP_DEFLATED) as zipObj:
-                for folderName, subfolders, filenames in os.walk(Config.s3_download_path):
-                    for filename in filenames:
-                        filePath = os.path.join(folderName, filename)
-                        zipObj.write(filePath, basename(filePath))
-            return send_from_directory(Config.s3_upload_path , path, as_attachment=True)
-
-        except Exception as error:
-            logger.error(f'create_app : download_files_from_s3 : {error}')
-            return None
-
-
-
-
-    @app.route("/s3_download_dir/<path:path>", methods=['GET', 'POST'])
-    def download_dir_file_from_s3(path):
-        try:
-            content = request.json
-            s3_client.download_subdirectory_files(bucket_name=content['bucket_name'],num_files=content['num_files'],file_download_path=Config.s3_download_path)
-
-            with zipfile.ZipFile(Config.s3_upload_path + "/files.zip", "w", zipfile.ZIP_DEFLATED) as zipObj:
-                for folderName, subfolders, filenames in os.walk(Config.s3_download_path):
-                    for filename in filenames:
-                        filePath = os.path.join(folderName, filename)
-                        zipObj.write(filePath, basename(filePath))
-
-            return send_from_directory(Config.s3_upload_path, path, as_attachment=True)
-
-        except Exception as error:
-            logger.error(f'create_app : download_dir_file_from_s3 : {error}')
-            return None
+            ret = {"err": "error", "details": error}
+            return ret
 
 
 

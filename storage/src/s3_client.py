@@ -20,22 +20,21 @@ class S3Client:
             aws_secret_access_key=secret_key,
             config=Config(signature_version="s3v4", s3={'addressing_style': 'virtual'}),
         )
-        self.not_allowed_types = ["zip", "7z", "rar", "tar", "gz"]
 
-    def upload_file(self, file, file_name, bucket):
+    def upload_file(self, file, file_name, bucket,folder=None):
         try:
-            if (self.s3.Bucket(AppConfig.TARGET_S3_BUCKET) in self.s3.buckets.all()) == False:
+            if (self.s3.Bucket(bucket) in self.s3.buckets.all()) == False:
                 self.s3.create_bucket(
-                    Bucket=AppConfig.TARGET_S3_BUCKET,
+                    Bucket=bucket,
                     CreateBucketConfiguration={
-                        'LocationConstraint': AppConfig.S3_REGION
+                        'LocationConstraint': os.environ['S3_REGION']
                     }
                 )
             logger.info(
-                "Uploading file to bucket {} s3 {}".format(AppConfig.TARGET_S3_BUCKET, self.url)
+                "Uploading file to bucket {} s3 {}".format(bucket, self.url)
             )
-            self.s3.Bucket(AppConfig.TARGET_S3_BUCKET).upload_file(file, bucket + "/" + file_name)
-            return AppConfig.TARGET_S3_BUCKET + "/" + bucket + "/" + file_name
+            self.s3.Bucket(bucket).upload_file(file, folder + "/" + file_name)
+            return bucket + "/" + folder + "/" + file_name
         except ClientError as e:
             logger.error(
                 "Cannot connect to the S3 {}. Please vefify the Credentials.".format(
