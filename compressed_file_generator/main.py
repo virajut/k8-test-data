@@ -53,13 +53,6 @@ class Process:
             logger.info(f"Process : upload_to_s3 : {e}")
             raise e
 
-    def download_n_files_from_s3(self, bucket_name, num_files):
-        try:
-            json = {'bucket_name': bucket_name, 'num_files': num_files}
-            return requests.post(self.server_base_url + "s3_download", json=json)
-        except Exception as e:
-            logger.error(f'MinioClient : upload_stream : {e} ')
-
     def list_files_from_minio(self, bucket_name):
         try:
             json = {'bucket_name': bucket_name}
