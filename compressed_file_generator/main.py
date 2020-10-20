@@ -39,7 +39,7 @@ class Process:
         except Exception as err:
             logger.info(f"Process : compress : {err}")
 
-    def upload_s3(self):
+    def upload_to_s3(self):
         try:
             _files = os.listdir(Config.upload_path)
             for file_name in _files:
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     try:
         process.compress_file()
         logger.info(f'Main : comfression is done')
-        re = process.upload_s3()
+        re = process.upload_to_s3()
     except Exception as err:
         logger.error(f'main: compress and upload file error : {err}')
         raise err
