@@ -119,9 +119,12 @@ if __name__ == "__main__":
         raise Exception(f'Main:Error while downloading files {err}')
 
     try:
+        logger.info(f'Main :Sending file for zipping')
         process.compress_file()
         logger.info(f'Main : comfression is done')
-        re = process.upload_to_s3()
+        logger.info(f'Main : Uploading compressed files to s3')
+        process.upload_to_s3()
+        logger.info(f'Main : Uploading is done')
     except Exception as err:
         logger.error(f'main: compress and upload file error : {err}')
         raise err
