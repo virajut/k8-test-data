@@ -102,6 +102,8 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 ## Run
 `docker-compose up -d scrapyd`
 
+`docker-compose up -d postgres`
+
 `docker-compose up -d rabbitmq`
 
 `docker-compose up`
