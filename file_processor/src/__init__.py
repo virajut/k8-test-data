@@ -314,7 +314,7 @@ def create_app():
     return app
 
 app = create_app()
-app.config['SQLALCHEMY_DATABASE_URI']=  os.environ.get('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI']=os.environ.get('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 session_options = {'autocommit': False, 'autoflush': False}
 
@@ -325,7 +325,7 @@ class FileInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     filename = db.Column(db.String(1000), index=True)
     path = db.Column(db.String(1000),nullable=True)
-    size = db.Column(db.Integer)
+    size = db.Column(db.String(1000))
     type = db.Column(db.String(1000), index=True)
     isMalicious = db.Column(db.Boolean, default=False, nullable=False)
     original_hash = db.Column(db.String(1000), index=True)
