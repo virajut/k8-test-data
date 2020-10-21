@@ -39,6 +39,7 @@ class Processor:
         )
         self.vt = VirusTotalService(Config.virustotal_key)
         self.input_file=None
+        self.isMalicious=None
 
     def get_files(self, filename):
         files = []
@@ -112,22 +113,24 @@ class Processor:
             elif report["status_code"] == 200:
                 logger.info(f'check_virustotal : response_code : {report["json_resp"]["response_code"]}')
                 if report["json_resp"]["response_code"]==1:
+                    logger.info(f"VIRUSTOTAL REPORT response code retrying {report['json_resp']['response_code']}")
+
                     self.virus_total_status = True
                     vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
                     with open(vt_file_name, "w") as fp:
                         fp.write(str(report))
 
+                    if 'positives' in report["json_resp"]:
+                        if int(report["json_resp"]["positives"]==0):
+                            self.isMalicious=False
+                        else:
+                            self.isMalicious = True
+                            
+            logger.info(f"isMalicious : {self.isMalicious}")
             logger.info(f"VIRUS TOTAL REPORT {report}")
             logger.info(
                 f"Processor : check_virustotal report status: {report['status_code']}"
             )
-
-            if resp["status_code"] == 200:
-                self.virus_total_status = True
-                vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
-                with open(vt_file_name, "w") as fp:
-                    fp.write(str(resp))
-
         except Exception as e:
             logger.error(f"Processor : check_virustotal error: {e}")
             raise e
@@ -151,7 +154,8 @@ class Processor:
                 meta['virus_total_status'] = self.virus_total_status
                 meta['gw_rebuild_xml_status'] = self.gw_rebuild_xml_status
                 meta['gw_rebuild_file_status'] = self.gw_rebuild_file_status
-                meta['rebuild_hash']=self.hash
+                meta['rebuild_hash']=None
+                meta['isMalicious'] = True
 
             meta_file_name = self.directory + "/metadata_" + self.hash + ".json"
             self.metadata=meta
