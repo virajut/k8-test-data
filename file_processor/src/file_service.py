@@ -43,10 +43,11 @@ class FileService:
             extension = suffix.split(".")[-1]
 
             meta['size']= str(file_stat.st_size) +  " bytes"
-            meta["name"] = file_path.split("/")[-1]
+            meta["file_name"] = file_path.split("/")[-1]
             meta['hash']=file_path.split("/")[-1].split('.')[0]
-            meta['creation_date'] = datetime.datetime.now()
+            meta['date_created'] = datetime.datetime.now()
             meta['expiry_date'] = None
+            meta['isMalicious']=True
             if not extension:
                 meta["extension"] = 'txt'
             else:

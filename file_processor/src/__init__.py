@@ -16,6 +16,8 @@ from src.services import (
     MQService,
 )
 
+from flask_sqlalchemy import SQLAlchemy
+
 logger.basicConfig(level=logger.INFO)
 
 
@@ -125,11 +127,21 @@ class Processor:
                 meta['virus_total_status'] = self.virus_total_status
                 meta['gw_rebuild_xml_status'] = self.gw_rebuild_xml_status
                 meta['gw_rebuild_file_status'] = self.gw_rebuild_file_status
+                meta['rebuild_hash']=self.hash
 
             meta_file_name = self.directory + "/metadata_" + self.hash + ".json"
+            self.metadata=meta
 
             with open(meta_file_name, "w") as fp:
                 fp.write(str(meta))
+            try:
+                logger.info("Posting file information to DB")
+                self.add_metadata_to_db(metadata=self.metadata)
+            except Exception as err:
+                logger.error(f"Error while posting data to DB {err}")
+                raise err
+
+
         except Exception as e:
             logger.error(f"Processor : get_metadata error: {e}")
             raise e
@@ -269,6 +281,19 @@ class Processor:
                     logger.error(f"Error processing file {f} : " + str(e))
                     break
 
+    def add_metadata_to_db(self,metadata):
+        f = FileInfo(filename=metadata['file_name'],path=metadata['url'],size=metadata['size'],type=metadata['extension'],isMalicious=metadata['isMalicious'],
+                     original_hash=metadata['hash'],rebuild_hash=metadata['rebuild_hash'],date_created=metadata['date_created'],
+                     virus_total_status=metadata['virus_total_status'],gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],
+                     gw_rebuild_file_status=metadata['gw_rebuild_file_status'])
+        try:
+
+            logger.info("Posting mkksss")
+            print(f)
+            db.session.add(f)
+            db.session.commit()
+        except Exception as ex:
+            logger.error(str(ex))
 
 def create_app():
     app = Flask(__name__)
@@ -289,3 +314,32 @@ def create_app():
         return jsonify({})
 
     return app
+
+
+app = create_app()
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:toor@postgres/test-data'
+session_options = {'autocommit': False, 'autoflush': False}
+db = SQLAlchemy(app, session_options=session_options)
+
+class FileInfo(db.Model):
+    __tablename__ = 'file_metadata'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(1000), index=True, unique=True)
+    path = db.Column(db.String(1000),nullable=True)
+    size = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(1000), index=True, unique=True)
+    isMalicious = db.Column(db.Boolean, default=False, nullable=False)
+    original_hash = db.Column(db.String(1000), index=True, unique=True)
+    rebuild_hash = db.Column(db.String(1000), index=True, unique=True)
+    date_created = db.Column(db.DateTime, nullable=False)
+    virus_total_status = db.Column(db.Boolean, default=False, nullable=False)
+    gw_rebuild_xml_status = db.Column(db.Boolean, default=False, nullable=False)
+    gw_rebuild_file_status = db.Column(db.Boolean, default=False, nullable=False)
+
+    def __repr__(self):
+        return '<File %r>' % (self.filename)
+
+db.create_all()
+db.session.commit()
+
