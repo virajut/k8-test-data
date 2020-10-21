@@ -15,7 +15,6 @@ from src.services import (
     GlasswallService,
     MQService,
 )
-
 from flask_sqlalchemy import SQLAlchemy
 
 logger.basicConfig(level=logger.INFO)
@@ -287,13 +286,12 @@ class Processor:
                      virus_total_status=metadata['virus_total_status'],gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],
                      gw_rebuild_file_status=metadata['gw_rebuild_file_status'])
         try:
-
-            logger.info("Posting mkksss")
-            print(f)
+            logger.info("Posting metadat to DB")
+            logger.info(f'File Name {f}')
             db.session.add(f)
             db.session.commit()
         except Exception as ex:
-            logger.error(str(ex))
+            logger.error(f'Error while posting to DB{ex}')
 
 def create_app():
     app = Flask(__name__)
@@ -315,23 +313,23 @@ def create_app():
 
     return app
 
-
 app = create_app()
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:toor@postgres/test-data'
+app.config['SQLALCHEMY_DATABASE_URI']=  os.environ.get('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 session_options = {'autocommit': False, 'autoflush': False}
-db = SQLAlchemy(app, session_options=session_options)
+
+db = SQLAlchemy(app)
 
 class FileInfo(db.Model):
     __tablename__ = 'file_metadata'
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(1000), index=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    filename = db.Column(db.String(1000), index=True)
     path = db.Column(db.String(1000),nullable=True)
-    size = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(1000), index=True, unique=True)
+    size = db.Column(db.Integer)
+    type = db.Column(db.String(1000), index=True)
     isMalicious = db.Column(db.Boolean, default=False, nullable=False)
-    original_hash = db.Column(db.String(1000), index=True, unique=True)
-    rebuild_hash = db.Column(db.String(1000), index=True, unique=True)
+    original_hash = db.Column(db.String(1000), index=True)
+    rebuild_hash = db.Column(db.String(1000), index=True)
     date_created = db.Column(db.DateTime, nullable=False)
     virus_total_status = db.Column(db.Boolean, default=False, nullable=False)
     gw_rebuild_xml_status = db.Column(db.Boolean, default=False, nullable=False)
