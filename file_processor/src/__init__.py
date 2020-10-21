@@ -1,13 +1,13 @@
 import hashlib
 import logging as logger
 import os
-import zipfile
 import time
-from os.path import basename
 from pathlib import Path
+
 import pyminizip
 import requests
 from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from src.config import Config
 from src.services import (
     MinioService,
@@ -16,7 +16,6 @@ from src.services import (
     GlasswallService,
     MQService,
 )
-from flask_sqlalchemy import SQLAlchemy
 
 logger.basicConfig(level=logger.INFO)
 
@@ -32,14 +31,14 @@ class Processor:
         self.infected_path = None
         self.infected_file = None
         self.virus_total_status = False
-        self.gw_rebuild_file_status= False
+        self.gw_rebuild_file_status = False
         self.gw_rebuild_xml_status = False
         self.minio = MinioService(
             Config.MINIO_URL, Config.MINIO_ACCESS_KEY, Config.MINIO_SECRET_KEY
         )
         self.vt = VirusTotalService(Config.virustotal_key)
-        self.input_file=None
-        self.isMalicious=None
+        self.input_file = None
+        self.isMalicious = None
 
     def get_files(self, filename):
         files = []
@@ -86,7 +85,7 @@ class Processor:
         # Move current file to it's own directory
         if self.ext:
             self.file_path = self.directory + "/" + self.hash + "." + self.ext
-        else :
+        else:
             self.file_path = self.directory + "/" + self.hash
 
         logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
@@ -100,19 +99,19 @@ class Processor:
             time.sleep(30)
             report = self.vt.file_report([resp['json_resp']['resource']])
             if report["status_code"] == 204:
-                count=0
+                count = 0
                 while report["status_code"] == 204:
-                    if count==3:
+                    if count == 3:
                         count = 0
                         break
-                    count=count+1
+                    count = count + 1
                     time.sleep(60)
                     report = self.vt.file_report([resp['json_resp']['resource']])
                     logger.info(f"VIRUSTOTAL REPORT after retrying {self.file_path} {report}")
 
             elif report["status_code"] == 200:
                 logger.info(f'check_virustotal : response_code : {report["json_resp"]["response_code"]}')
-                if report["json_resp"]["response_code"]==1:
+                if report["json_resp"]["response_code"] == 1:
                     logger.info(f"VIRUSTOTAL REPORT response code retrying {report['json_resp']['response_code']}")
 
                     self.virus_total_status = True
@@ -121,11 +120,11 @@ class Processor:
                         fp.write(str(report))
 
                     if 'positives' in report["json_resp"]:
-                        if int(report["json_resp"]["positives"]==0):
-                            self.isMalicious=False
+                        if int(report["json_resp"]["positives"] == 0):
+                            self.isMalicious = False
                         else:
                             self.isMalicious = True
-                            
+
             logger.info(f"isMalicious : {self.isMalicious}")
             logger.info(f"VIRUS TOTAL REPORT {report}")
             logger.info(
@@ -154,11 +153,11 @@ class Processor:
                 meta['virus_total_status'] = self.virus_total_status
                 meta['gw_rebuild_xml_status'] = self.gw_rebuild_xml_status
                 meta['gw_rebuild_file_status'] = self.gw_rebuild_file_status
-                meta['rebuild_hash']=None
-                meta['isMalicious'] = True
+                meta['rebuild_hash'] = None
+                meta['isMalicious'] = self.isMalicious
 
             meta_file_name = self.directory + "/metadata_" + self.hash + ".json"
-            self.metadata=meta
+            self.metadata = meta
 
             with open(meta_file_name, "w") as fp:
                 fp.write(str(meta))
@@ -177,21 +176,21 @@ class Processor:
     def rebuild_glasswall(self):
         logger.info("rebuilding with GW engine")
         try:
-            rebuild_file_name = self.hash+ '.' + self.ext if self.ext is not None else self.hash
+            rebuild_file_name = self.hash + '.' + self.ext if self.ext is not None else self.hash
             response = GlasswallService.rebuild(
-                rebuild_file_name , self.directory, Config.GW_REBUILD_MODE["file"]
+                rebuild_file_name, self.directory, Config.GW_REBUILD_MODE["file"]
             )
             logger.info(f"rebuild file response : {response} ")
             if response:
                 file = response.content
                 status = response.status_code
-                if status==200:
+                if status == 200:
                     self.gw_rebuild_file_status = True
                     with open(self.directory + f"/rebuild_{rebuild_file_name}", "wb") as fp:
                         fp.write(file)
             # Get xml report
             response = GlasswallService.rebuild(
-                rebuild_file_name , self.directory, Config.GW_REBUILD_MODE["xml_report"]
+                rebuild_file_name, self.directory, Config.GW_REBUILD_MODE["xml_report"]
             )
             logger.info(f"rebuild xml_file response : {response} ")
             if response:
@@ -199,7 +198,7 @@ class Processor:
                 status = response.status_code
                 logger.info(f"status of rebuild {response.status_code}")
                 logger.info(f"status of rebuild {response.content}")
-                if status==200:
+                if status == 200:
                     self.gw_rebuild_xml_status = True
                     with open(
                             self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb"
@@ -224,7 +223,7 @@ class Processor:
             # zipfile.ZipFile(malware_zip_name, mode="w").write(
             #     original_file, basename(original_file)
             # )
-            pyminizip.compress(original_file,None, malware_zip_name, 'infected', 5)
+            pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
             try:
                 os.remove(original_file)
             except Exception:
@@ -272,12 +271,12 @@ class Processor:
         malware_zip_name = self.directory + "/" + self.hash + ".zip"
         try:
             self.storage_base_url = os.environ.get("storage_base_url", None)
-            bucket_name=os.environ.get("TESTING_S3_BUCKET")
+            bucket_name = os.environ.get("TESTING_S3_BUCKET")
             file_name = self.hash + ".zip"
             file = malware_zip_name
-            payload = {'bucket_name':bucket_name , 'folder_name': None}
+            payload = {'bucket_name': bucket_name, 'folder_name': None}
             files = {"file": (file_name, open(file, "rb")), }
-            re=requests.post(self.storage_base_url + "upload_to_s3", files=files, params=payload)
+            re = requests.post(self.storage_base_url + "upload_to_s3", files=files, params=payload)
             logger.info(f'Processor : upload_original_file_to_s3 : status : {re.status_code}')
         except Exception as error:
             logger.error(f"Process : upload_original_file_to_s3 : {error}")
@@ -285,7 +284,7 @@ class Processor:
 
     def process(self, input_file):
         logger.info(f"processing Main file : {input_file}")
-        self.input_file=input_file
+        self.input_file = input_file
 
         default_exceptions = Exception
         processes = [
@@ -295,7 +294,7 @@ class Processor:
             (self.prepare_result, default_exceptions),
             (self.upload, default_exceptions),
             (self.send_mq, default_exceptions),
-            (self.upload_original_file_to_s3,default_exceptions),
+            (self.upload_original_file_to_s3, default_exceptions),
         ]
 
         files = self.get_files(input_file)
@@ -311,10 +310,13 @@ class Processor:
                     logger.error(f"Error processing file {f} : " + str(e))
                     break
 
-    def add_metadata_to_db(self,metadata):
-        f = FileInfo(filename=metadata['file_name'],path=metadata['url'],size=metadata['size'],type=metadata['extension'],isMalicious=metadata['isMalicious'],
-                     original_hash=metadata['hash'],rebuild_hash=metadata['rebuild_hash'],date_created=metadata['date_created'],
-                     virus_total_status=metadata['virus_total_status'],gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],
+    def add_metadata_to_db(self, metadata):
+        f = FileInfo(filename=metadata['file_name'], path=metadata['url'], size=metadata['size'],
+                     type=metadata['extension'], isMalicious=metadata['isMalicious'],
+                     original_hash=metadata['hash'], rebuild_hash=metadata['rebuild_hash'],
+                     date_created=metadata['date_created'],
+                     virus_total_status=metadata['virus_total_status'],
+                     gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],
                      gw_rebuild_file_status=metadata['gw_rebuild_file_status'])
         try:
             logger.info("Posting metadat to DB")
@@ -323,6 +325,7 @@ class Processor:
             db.session.commit()
         except Exception as ex:
             logger.error(f'Error while posting to DB{ex}')
+
 
 def create_app():
     app = Flask(__name__)
@@ -344,18 +347,20 @@ def create_app():
 
     return app
 
+
 app = create_app()
-app.config['SQLALCHEMY_DATABASE_URI']=os.environ.get('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 session_options = {'autocommit': False, 'autoflush': False}
 
 db = SQLAlchemy(app)
 
+
 class FileInfo(db.Model):
     __tablename__ = 'file_metadata'
-    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     filename = db.Column(db.String(1000), index=True)
-    path = db.Column(db.String(1000),nullable=True)
+    path = db.Column(db.String(1000), nullable=True)
     size = db.Column(db.String(1000))
     type = db.Column(db.String(1000), index=True)
     isMalicious = db.Column(db.Boolean, default=False, nullable=False)
@@ -369,6 +374,6 @@ class FileInfo(db.Model):
     def __repr__(self):
         return '<File %r>' % (self.filename)
 
+
 db.create_all()
 db.session.commit()
-
