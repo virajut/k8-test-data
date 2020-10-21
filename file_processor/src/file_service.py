@@ -47,7 +47,6 @@ class FileService:
             meta['hash']=file_path.split("/")[-1].split('.')[0]
             meta['date_created'] = datetime.datetime.now()
             meta['expiry_date'] = None
-            meta['isMalicious']=True
             if not extension:
                 meta["extension"] = 'txt'
             else:
