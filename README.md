@@ -84,6 +84,8 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 `docker build -t rabbit-mq:1.0 rabbitmq`
 
+`docker build -t scrapyd gw_crawler/malicious_file_crawler`
+
 `docker build -t glasswallcrawler:1.0 gw_crawler`
 
 `docker build -t k8-file-processor file_processor`
@@ -98,6 +100,9 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 
 
 ## Run
+`docker-compose up -d scrapyd`
+
+`docker-compose up -d rabbitmq`
 
 `docker-compose up`
 
