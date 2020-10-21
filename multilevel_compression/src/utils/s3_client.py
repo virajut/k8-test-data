@@ -1,15 +1,19 @@
 import os
+import sys
 import time
 import boto3
 import logging
 from botocore.client import Config
 from botocore.exceptions import ClientError
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from src.config import Config as AppConfig
 
 logger = logging.getLogger("GW:s3")
 
 
 class S3Client:
+
     def __init__(self, url, access_key, secret_key):
         self.url = url
         self.s3 = boto3.resource(
@@ -21,6 +25,7 @@ class S3Client:
         )
 
     def upload_file(self, file_path, file_name, bucket):
+        print("uploading", file_name, file_path)
         try:
             if (self.s3.Bucket(AppConfig.S3_BUCKET) in self.s3.buckets.all()) == False:
                 self.s3.create_bucket(
@@ -44,13 +49,37 @@ class S3Client:
         except Exception as e:
             logger.error("ex : {}".format(e))
 
-    def get_files(self, folder_name):
+    def download_files(self, bucket_name, num_files, file_download_path=None):
+
         try:
-            bucket = self.s3.Bucket(AppConfig.S3_BUCKET)
-            files = bucket.meta.client.list_objects(
-                        Bucket=bucket.name,
-                        Prefix=folder_name + "/",
-                        )
-            return files
-        except Exception as ex:
-            logger.error("error getting files from s3 {}".format(str(ex)))
+            file_path = file_download_path or ""
+            # if not os.path.exists(Config.download_path):
+            # # os.makedirs(Config.download_path)
+            logger.info("Check if the Bucket {} exists".format(bucket_name))
+            if self.s3.Bucket(bucket_name) not in self.s3.buckets.all():
+                raise Exception(f"{bucket_name} bucket does not exist")
+            bucket = self.s3.Bucket(bucket_name)
+            files_list = []
+            saved_files = 0
+            for files in bucket.objects.all():
+                try:
+                    path, filename = os.path.split(files.key)
+                    obj_file = file_path + filename
+                    logger.info("Downloading file {}.".format(filename))
+                    bucket.download_file(files.key, obj_file)
+                    files_list.append(obj_file)
+                    saved_files += 1
+                    if saved_files == num_files:
+                        break
+                except Exception as ex:
+                    continue
+            return files_list
+        except ClientError as e:
+            logger.error(
+                "Cannot Connect to the Minio {}. Please Verify your credentials.".format(
+                    self.url
+                )
+            )
+        except Exception as e:
+            logger.error(e)
+
