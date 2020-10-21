@@ -33,7 +33,11 @@ class S3Client:
             logger.info(
                 "Uploading file to bucket {} s3 {}".format(bucket, self.url)
             )
-            self.s3.Bucket(bucket).upload_file(file, folder + "/" + file_name)
+            if folder:
+                self.s3.Bucket(bucket).upload_file(file, folder + "/" + file_name)
+            else:
+                self.s3.Bucket(bucket).upload_file(file, file_name)
+
             return bucket + "/" + folder + "/" + file_name
         except ClientError as e:
             logger.error(
