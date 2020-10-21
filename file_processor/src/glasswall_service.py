@@ -30,6 +30,6 @@ class GlasswallService:
             logger.info(str(ex))
         else:
             output = response
-            if '"message": "failed"' in str(output):
+            if '"message": "failed"' in str(response.content):
                 output = None
         return output
