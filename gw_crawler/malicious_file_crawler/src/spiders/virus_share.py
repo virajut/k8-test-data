@@ -12,7 +12,7 @@ import scrapy
 from src.spiders.scraper import Scraper
 from scrapy.loader import ItemLoader
 from src.items import MaliciousFileCrawlerItem
-
+from src.utils.read_config import ConfigReader
 logger = logging.getLogger(__name__)
 
 class VirusShareScraper(Scraper):
@@ -32,9 +32,10 @@ class VirusShareScraper(Scraper):
 
     }
 
-    def __init__(self, config=None, data=None):
-        super(VirusShareScraper, self).__init__()
-        self.cfg = config
+    def __init__(self, config=None, data=None, *args, **kwargs):
+        super(VirusShareScraper, self).__init__(*args, **kwargs)
+        self.cfg = ConfigReader(config.upper()).read_config()
+        # self.cfg = config
         self.base_url = self.cfg.get('base_url')
         self.url = self.cfg.get('virusshare_url')
         self.hash_url = self.cfg.get('virusshare_hash_url')
