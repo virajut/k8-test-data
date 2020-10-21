@@ -5,7 +5,8 @@ import zipfile
 import time
 from os.path import basename
 from pathlib import Path
-
+import pyminizip
+import requests
 from flask import Flask, request, jsonify
 from src.config import Config
 from src.services import (
@@ -120,6 +121,12 @@ class Processor:
                 f"Processor : check_virustotal report status: {report['status_code']}"
             )
 
+            if resp["status_code"] == 200:
+                self.virus_total_status = True
+                vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
+                with open(vt_file_name, "w") as fp:
+                    fp.write(str(resp))
+
         except Exception as e:
             logger.error(f"Processor : check_virustotal error: {e}")
             raise e
@@ -199,9 +206,10 @@ class Processor:
             real_name = self.filename + "." + ext
             original_file = self.directory + "/" + real_name
             os.rename(self.file_path, original_file)
-            zipfile.ZipFile(malware_zip_name, mode="w").write(
-                original_file, basename(original_file)
-            )
+            # zipfile.ZipFile(malware_zip_name, mode="w").write(
+            #     original_file, basename(original_file)
+            # )
+            pyminizip.compress(original_file,None, malware_zip_name, 'infected', 5)
             try:
                 os.remove(original_file)
             except Exception:
@@ -244,6 +252,22 @@ class Processor:
             logger.error(f"Processor : send_mq: {error}")
             raise error
 
+    def upload_original_file_to_s3(self):
+        logger.info("sending original file to s3 through storage micro service")
+        malware_zip_name = self.directory + "/" + self.hash + ".zip"
+        try:
+            self.storage_base_url = os.environ.get("storage_base_url", None)
+            bucket_name=os.environ.get("TESTING_S3_BUCKET")
+            file_name = self.hash + ".zip"
+            file = malware_zip_name
+            payload = {'bucket_name':bucket_name , 'folder_name': None}
+            files = {"file": (file_name, open(file, "rb")), }
+            re=requests.post(self.storage_base_url + "upload_to_s3", files=files, params=payload)
+            logger.info(f'Processor : upload_original_file_to_s3 : status : {re.status_code}')
+        except Exception as error:
+            logger.error(f"Process : upload_original_file_to_s3 : {error}")
+            raise error
+
     def process(self, input_file):
         logger.info(f"processing Main file : {input_file}")
         self.input_file=input_file
@@ -256,6 +280,7 @@ class Processor:
             (self.prepare_result, default_exceptions),
             (self.upload, default_exceptions),
             (self.send_mq, default_exceptions),
+            (self.upload_original_file_to_s3,default_exceptions),
         ]
 
         files = self.get_files(input_file)

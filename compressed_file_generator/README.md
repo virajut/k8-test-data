@@ -1,11 +1,10 @@
 # Compressed File Generator
 
+    Downloads file from minio and compresss to 7z,rar,zip,tar,gz and upload to s3 bucket 
+    
 ## Usage
 * Set .env variables from .env.sample
 
-* source_type=minio --> if source/malware files present in minio
-
-* source_type=s3 --> if source/malware files present in minio
 
 ## Build
 
@@ -16,5 +15,12 @@
 
 ##To run
 
-    `docker run --env-file .env compressed-file-generator`
+     cd k8-test-data/
+     
+         docker-compose up -d minio
+         docker-compose up -d storage_service
+         
+     cd compressed-file-generator/
+     
+        `docker run --env-file .env compressed-file-generator`
 
