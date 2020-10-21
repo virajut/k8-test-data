@@ -107,6 +107,18 @@ services:
     ports:
       - 5003:5003
 
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: test-data
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: toor
+    volumes:
+      - ./db/postgres:/var/lib/postgresql/data
+    ports:
+     - 5432:5432
+
   k8-s3-sync:
     image: k8-s3-sync
     env_file:
@@ -118,8 +130,10 @@ services:
       - 5004:5004
     links:
       - minio
+      - postgres
     depends_on:
       - minio
+      - postgres
 
   gov-uk-migration:
     image: gov-uk-migration

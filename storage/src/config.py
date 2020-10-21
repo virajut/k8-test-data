@@ -22,3 +22,6 @@ class Config(object):
     MINIO_ENDPOINT = os.environ["MINIO_HOSTNAME"]
     MINIO_SECRET_KEY = os.environ["MINIO_ACCESS_KEY_ID"]
     MINIO_ACCESS_KEY = os.environ["MINIO_SECRET_ACCESS_KEY"]
+
+    minio_downlaod="src/download"
+    s3_upload_path = "src/upload"

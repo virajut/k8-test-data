@@ -44,3 +44,13 @@ class S3Client:
         except Exception as e:
             logger.error("ex : {}".format(e))
 
+    def get_files(self, folder_name):
+        try:
+            bucket = self.s3.Bucket(AppConfig.S3_BUCKET)
+            files = bucket.meta.client.list_objects(
+                        Bucket=bucket.name,
+                        Prefix=folder_name + "/",
+                        )
+            return files
+        except Exception as ex:
+            logger.error("error getting files from s3 {}".format(str(ex)))
