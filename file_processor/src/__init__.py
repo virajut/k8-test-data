@@ -3,7 +3,7 @@ import logging as logger
 import os
 import time
 from pathlib import Path
-
+from ast import literal_eval
 import pyminizip
 import requests
 from flask import Flask, request, jsonify
@@ -39,6 +39,9 @@ class Processor:
         self.vt = VirusTotalService(Config.virustotal_key)
         self.input_file = None
         self.isMalicious = None
+        self.metadata = {}
+        self.rebuild_hash = None
+        self.minio_meta = None
 
     def get_files(self, filename):
         files = []
@@ -50,6 +53,7 @@ class Processor:
         self.minio.download_files(
             bucket_name=ext, file_name=filename, download_path=Config.download_path
         )
+        self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
 
         if ext == "zip":
             FileService.unzip(Config.download_path + "/" + filename, self.directory)
@@ -76,7 +80,13 @@ class Processor:
             self.ext = None
 
         # convert file to hash
-        self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
+        with open(file_path, mode='rb') as file:  # b is important -> binary
+            fileContent = file.read()
+
+        original_hash = hashlib.sha1(fileContent).hexdigest()
+        self.hash = original_hash
+        logger.info(f"Original_hash : {original_hash}")
+        # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
 
         # Create directory for this file
         self.directory = _dir + "/" + self.hash
@@ -93,43 +103,45 @@ class Processor:
 
     def check_virustotal(self):
         try:
-            logger.info("checking malicious with VirusTotal")
-            time.sleep(30)
-            resp = self.vt.file_scan(self.file_path)
-            time.sleep(30)
-            report = self.vt.file_report([resp['json_resp']['resource']])
-            if report["status_code"] == 204:
-                count = 0
-                while report["status_code"] == 204:
-                    if count == 3:
-                        count = 0
-                        break
-                    count = count + 1
-                    time.sleep(60)
-                    report = self.vt.file_report([resp['json_resp']['resource']])
-                    logger.info(f"VIRUSTOTAL REPORT after retrying {self.file_path} {report}")
+            if 'x-amz-meta-malicious' in self.minio_meta.metadata:
+                self.isMalicious = literal_eval(self.minio_meta.metadata['x-amz-meta-malicious'])
+            if not self.isMalicious == False:
+                logger.info("checking malicious with VirusTotal")
+                time.sleep(30)
+                resp = self.vt.file_scan(self.file_path)
+                time.sleep(30)
+                report = self.vt.file_report([resp['json_resp']['resource']])
+                if report["status_code"] == 204:
+                    count = 0
+                    while report["status_code"] == 204:
+                        if count == 3:
+                            count = 0
+                            break
+                        count = count + 1
+                        time.sleep(60)
+                        report = self.vt.file_report([resp['json_resp']['resource']])
+                        logger.info(f"VIRUSTOTAL REPORT after retrying {self.file_path} {report}")
 
-            elif report["status_code"] == 200:
-                logger.info(f'check_virustotal : response_code : {report["json_resp"]["response_code"]}')
-                if report["json_resp"]["response_code"] == 1:
-                    logger.info(f"VIRUSTOTAL REPORT response code retrying {report['json_resp']['response_code']}")
+                elif report["status_code"] == 200:
+                    logger.info(f'check_virustotal : response_code : {report["json_resp"]["response_code"]}')
+                    if report["json_resp"]["response_code"] == 1:
+                        logger.info(f"VIRUSTOTAL REPORT response code retrying {report['json_resp']['response_code']}")
 
-                    self.virus_total_status = True
-                    vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
-                    with open(vt_file_name, "w") as fp:
-                        fp.write(str(report))
+                        self.virus_total_status = True
+                        vt_file_name = self.directory + "/virustotal_" + self.hash + ".json"
+                        with open(vt_file_name, "w") as fp:
+                            fp.write(str(report))
 
-                    if 'positives' in report["json_resp"]:
-                        if int(report["json_resp"]["positives"] == 0):
-                            self.isMalicious = False
-                        else:
-                            self.isMalicious = True
+                        if 'positives' in report["json_resp"]:
+                            if int(report["json_resp"]["positives"] == 0):
+                                self.isMalicious = False
+                            else:
+                                self.isMalicious = True
 
-            logger.info(f"isMalicious : {self.isMalicious}")
-            logger.info(f"VIRUS TOTAL REPORT {report}")
-            logger.info(
-                f"Processor : check_virustotal report status: {report['status_code']}"
-            )
+                logger.info(f"isMalicious : {self.isMalicious}")
+                logger.info(
+                    f"Processor : check_virustotal report status: {report['status_code']}"
+                )
         except Exception as e:
             logger.error(f"Processor : check_virustotal error: {e}")
             raise e
@@ -143,17 +155,18 @@ class Processor:
             if meta:
 
                 logger.info(f'get_metadata : bucket_name {self.bucket_name}')
-                logger.info(f'get_metadata : bucket_name {self.bucket_name}')
-                minio_meta = self.minio.get_stat(bucket_name=self.bucket_name,
-                                                 file_name=self.input_file)
+                minio_meta = self.minio_meta
                 logger.info(f'minio_meta {minio_meta}')
                 if minio_meta:
                     if 'x-amz-meta-url' in minio_meta.metadata:
                         meta['url'] = minio_meta.metadata['x-amz-meta-url']
+                ext = self.ext if self.ext is not None else ""
+                real_name = self.filename + "." + ext
+                meta["file_name"] = real_name
                 meta['virus_total_status'] = self.virus_total_status
                 meta['gw_rebuild_xml_status'] = self.gw_rebuild_xml_status
                 meta['gw_rebuild_file_status'] = self.gw_rebuild_file_status
-                meta['rebuild_hash'] = None
+                meta['rebuild_hash'] = self.rebuild_hash
                 meta['isMalicious'] = self.isMalicious
 
             meta_file_name = self.directory + "/metadata_" + self.hash + ".json"
@@ -161,13 +174,6 @@ class Processor:
 
             with open(meta_file_name, "w") as fp:
                 fp.write(str(meta))
-            try:
-                logger.info("Posting file information to DB")
-                self.add_metadata_to_db(metadata=self.metadata)
-            except Exception as err:
-                logger.error(f"Error while posting data to DB {err}")
-                raise err
-
 
         except Exception as e:
             logger.error(f"Processor : get_metadata error: {e}")
@@ -184,6 +190,8 @@ class Processor:
             if response:
                 file = response.content
                 status = response.status_code
+                self.rebuild_hash = hashlib.sha1(file).hexdigest()
+                logger.info(f"status of rebuild file {response.status_code}")
                 if status == 200:
                     self.gw_rebuild_file_status = True
                     with open(self.directory + f"/rebuild_{rebuild_file_name}", "wb") as fp:
@@ -197,13 +205,14 @@ class Processor:
                 xml_file = response.content
                 status = response.status_code
                 logger.info(f"status of rebuild {response.status_code}")
-                logger.info(f"status of rebuild {response.content}")
                 if status == 200:
                     self.gw_rebuild_xml_status = True
                     with open(
                             self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb"
                     ) as fp:
                         fp.write(xml_file)
+
+            logger.info(f"Rebuild_hash : {self.rebuild_hash}")
 
         except Exception as error:
             logger.error(f"Processor : rebuild_glasswall: {error}")
@@ -261,7 +270,22 @@ class Processor:
                 "minio_bucket": "processed",
                 "file": name + ".zip",
             }
-            MQService.send(payload)
+            response = MQService.send(payload)
+
+            meta = self.metadata
+            meta['path'] = None
+            logger.info(f's3 sync status : {response.status_code}')
+            if response.status_code == 200:
+                meta['path'] = self.ext + "/" + name + ".zip"
+                logger.info(f"s3 upload_path : {meta['path']}")
+                self.metadata = meta
+            try:
+                logger.info("Posting file information to DB")
+                self.add_metadata_to_db(metadata=self.metadata)
+            except Exception as err:
+                logger.error(f"Error while posting data to DB {err}")
+                raise err
+
         except Exception as error:
             logger.error(f"Processor : send_mq: {error}")
             raise error
@@ -311,9 +335,9 @@ class Processor:
                     break
 
     def add_metadata_to_db(self, metadata):
-        f = FileInfo(filename=metadata['file_name'], path=metadata['url'], size=metadata['size'],
+        f = FileInfo(filename=metadata['file_name'], path=metadata['path'], size=metadata['size'],
                      type=metadata['extension'], isMalicious=metadata['isMalicious'],
-                     original_hash=metadata['hash'], rebuild_hash=metadata['rebuild_hash'],
+                     original_hash=metadata['original_hash'], rebuild_hash=metadata['rebuild_hash'],
                      date_created=metadata['date_created'],
                      virus_total_status=metadata['virus_total_status'],
                      gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],

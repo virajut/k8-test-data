@@ -18,4 +18,5 @@ class MQService:
         logger.info(f'MQService: send : payload : {payload}')
 
         response = requests.post(s3_sync_api, json=payload)
+        return response
 
