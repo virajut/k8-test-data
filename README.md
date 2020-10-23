@@ -132,4 +132,10 @@ b. Go to Kubernetes master node (K8 Cluste Setup is ongoing, update the Master N
   
   ```./k8s*deploy.sh```
 
-  (Make sure to update the env settings, and the docker image as per the step 1 in _dist/k8s/k8s*deploy_def.yml_).
+  (Make sure to update the env settings, and the docker image as per the step 1 in _dist/k8s/k8s*deploy_def.yml_).  
+
+## K8 ELK Stack Centralized Logging
+Setup a centralized logging system to collect logs from Pods running in a Kubernetes cluster, to send the log data into Elasticsearch, and to finally visualize the log data in Kibana using various interactive real-time visualizations. This can be achieved by setting up Elasticsearch, Filebeat and Kibana in Kubernetes.
+
+In order to deploy this setup, grab the entire folder _k8_elk_logging_, and execute the following script:
+```./dist/scripts/k8s_elk_deploy.sh```
