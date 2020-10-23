@@ -51,6 +51,8 @@ class Processor:
     def get_files(self, filename):
         files = []
         self.filename = filename
+        self.main_filename=filename
+
         lst=self.filename.split(".")
         if len(lst)==3:
             name= self.filename.split(".")[0]
@@ -254,7 +256,7 @@ class Processor:
             self.original_name=original_file
             os.rename(self.file_path, original_file)
             logger.info(f"original file {original_file}")
-          
+
             if not self.isMalicious==False:
                 malware_zip_name = self.directory + "/" + self.hash + ".zip"
                 pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
@@ -365,8 +367,9 @@ class Processor:
     def delete_folder(self,path):
         try:
             logger.info("File Processing : Done")
-            logger.info(f"deleting  : {path}")
-            shutil.rmtree(self.directory)
+            logger.info(f"deleting  : {Config.download_path}")
+            #shutil.rmtree(self.directory)
+            shutil.rmtree(Config.download_path)
         except Exception as err:
             logger.error((f'Error while deleted download upload path'))
             raise err
