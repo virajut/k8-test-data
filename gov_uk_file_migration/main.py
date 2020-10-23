@@ -109,37 +109,47 @@ class GovUKFileMigration:
         return bucket_name
 
     def preprocess_files(self, file):
-
-        # 1. extract meta data of the file
-        bucket_name = GovUKFileMigration.get_bucket_name(file)
-        file_name = file.split('/')[-1]
-
-        logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
-                    " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
-
         try:
+            # 1. extract meta data of the file
+            bucket_name = GovUKFileMigration.get_bucket_name(file)
+            file_name = file.split('/')[-1]
+
+            logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
+                        " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
             # 2. upload the file to minio before passing it to processor.
             metadata={"malicious": False }
-            GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name,metadata=metadata)
+            try:
+                if (len(bucket_name)>62 or len(bucket_name)<4):
+                    bucket_name="miscellaneous"
+                else:
+                    GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name,metadata=metadata)
+            except:
+                pass
         except Exception as e:
             logger.info("GovUKFileMigration::preprocess_files Got error {} "
                         "while uploading to minio.".format(e))
             raise e
 
         # 3. pass received file to file processor
-        processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
-        logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
-                    "file %s and bucket name %s" % (processor_response, file, bucket_name))
+        try:
+            processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
+            logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
+                        "file %s and bucket name %s" % (processor_response, file, bucket_name))
+        except:
+            pass
 
     @staticmethod
     def upload_to_minio(bucket_name, file_name, file_path,metadata):
 
         logger.info("GovUKFileMigration::upload_to_minio Uploading %s present at %s "
                     "to minio bucket %s" % (file_name, file_path, bucket_name))
-        _client = Minio(endpoint=Config.MINIO_ENDPOINT,
-                        access_key=Config.MINIO_ACCESS_KEY,
-                        secret_key=Config.MINIO_SECRET_KEY,
-                        secure=False)
+        try:
+            _client = Minio(endpoint=Config.MINIO_ENDPOINT,
+                            access_key=Config.MINIO_ACCESS_KEY,
+                            secret_key=Config.MINIO_SECRET_KEY,
+                            secure=False)
+        except Exception as err:
+            logger.error(f"upload_to_minio exception {err}")
 
         if not _client.bucket_exists(bucket_name):
             _client.make_bucket(bucket_name=bucket_name)
@@ -178,20 +188,26 @@ class GovUKFileMigration:
 
 if __name__ == '__main__':
 
-    # create compression obj
-    migration_obj = GovUKFileMigration()
+    try:
 
-    # get file list from sub directory
-    file_list = migration_obj.get_file_list()
-    logger.info("GovUKFileMigration::__main__ Number of files from gov-uk bucket: {}".format(len(file_list)))
+        # create compression obj
+        migration_obj = GovUKFileMigration()
 
-    # iterate over each file and download
-    for file_idx in range(1, len(file_list)):
+        # get file list from sub directory
+        file_list = migration_obj.get_file_list()
+        logger.info("GovUKFileMigration::__main__ Number of files from gov-uk bucket: {}".format(len(file_list)))
 
-        download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
+        # iterate over each file and download
+        for file_idx in range(1, len(file_list)):
 
-        # pass the file to file processor as it downloads
-        migration_obj.preprocess_files(download_path)
+            download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
+
+            # pass the file to file processor as it downloads
+            migration_obj.preprocess_files(download_path)
+            
+    except Exception as err:
+        logger.info("Error in main")
+        raise err
 
 
 
