@@ -67,7 +67,7 @@ services:
   k8-s3-sync:
     image: k8-s3-sync
     env_file:
-      - ../s3_sync/.env.gov.uk
+      - ../s3_sync/.env
     build:
       context: .
       dockerfile: ../s3_sync/Dockerfile
@@ -93,7 +93,6 @@ services:
       - minio
       - k8-file-processor
       - storage-adapter
-
 
 volumes:
   data1-1:

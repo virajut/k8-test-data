@@ -78,6 +78,11 @@ Malware Public Repositories ( Proceed with caution when handling live malware) :
 Public malware reference - https://cyberlab.pacific.edu/resources/malware-samples-for-students
 Note :  http://contagiodump.blogspot.com/ in above public reference not implemented since it is paid service and password for malware zip is not availble
 
+
+
+###To run GOV_UK FILES please refer gov_uk_file_migration/readme.md
+    
+#Scraper and Virus file processing steps
 ## Build
 
 * Set .env file in each service(refer env.zip)
@@ -112,3 +117,17 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 ## Run security check
 
 `python3 -m bandit --skip B605 -ll -r .`
+
+#Postgress
+
+    You can setup external postgres by using SQLALCHEMY_DATABASE_URI
+    
+    Download postgress browser client
+    https://www.postgresql.org/download/
+    
+    Setup your db 
+    host: <IP>:5432
+    username : postgres
+    password : toor
+    
+

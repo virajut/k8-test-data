@@ -42,6 +42,9 @@ class Processor:
         self.metadata = {}
         self.rebuild_hash = None
         self.minio_meta=None
+        self.meta_file_name=None
+        self.gw_rebuild_xml_name=None
+        self.gw_rebuild_file_name=None
 
 
     def get_files(self, filename):
@@ -54,7 +57,6 @@ class Processor:
         self.minio.download_files(
             bucket_name=ext, file_name=filename, download_path=Config.download_path
         )
-
         self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
         logger.info(f'minio metadata : {self.minio_meta}')
 
@@ -76,7 +78,15 @@ class Processor:
         _dir, filename = file_path.rsplit("/", 1)
 
         try:
-            self.filename, self.ext = filename.split(".")
+            list=filename.split(".")
+            if len(list)==3:
+                self.filename=list[0]
+                self.ext=list[2]
+            elif len(list)==2:
+                self.filename, self.ext = filename.split(".")
+            else:
+                self.filename = filename
+                self.ext = None
 
         except Exception:
             self.filename = filename
@@ -88,7 +98,8 @@ class Processor:
 
         original_hash = hashlib.sha1(fileContent).hexdigest()
         self.hash = original_hash
-        logger.info(f"Original_hash : {original_hash}")
+        logger.info(f""
+                    f" : {original_hash}")
         # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
 
         # Create directory for this file
@@ -172,6 +183,7 @@ class Processor:
                 meta['isMalicious'] = self.isMalicious
 
             meta_file_name = self.directory + "/metadata_" + self.hash + ".json"
+            self.meta_file_name=meta_file_name
             self.metadata = meta
 
             with open(meta_file_name, "w") as fp:
@@ -198,6 +210,7 @@ class Processor:
                     self.gw_rebuild_file_status = True
                     with open(self.directory + f"/rebuild_{rebuild_file_name}", "wb") as fp:
                         fp.write(file)
+                    self.gw_rebuild_file_name = "rebuild_" + rebuild_file_name
             # Get xml report
             response = GlasswallService.rebuild(
                 rebuild_file_name, self.directory, Config.GW_REBUILD_MODE["xml_report"]
@@ -213,6 +226,7 @@ class Processor:
                             self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb"
                     ) as fp:
                         fp.write(xml_file)
+                    self.gw_rebuild_xml_name="rebuild_report_" + self.hash + ".xml"
 
             logger.info(f"Rebuild_hash : {self.rebuild_hash}")
 
@@ -223,108 +237,86 @@ class Processor:
     def prepare_result(self):
         try:
             logger.info(
-                "combining all reports, original file and malicious file to a zip"
+                "Combining all reports, original file and malicious file to a zip"
             )
-            malware_zip_name = self.directory + "/" + self.hash + ".zip"
             ext = self.ext if self.ext is not None else ""
             real_name = self.filename + "." + ext
             original_file = self.directory + "/" + real_name
+            self.original_name=original_file
             os.rename(self.file_path, original_file)
-
+            logger.info(f"original file {original_file}")
             if not self.isMalicious==False:
+                malware_zip_name = self.directory + "/" + self.hash + ".zip"
                 pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
                 try:
                     os.remove(original_file)
+                    FileService.prepare_zip(
+                        zip_filename=self.directory.split("/")[-1],
+                        folder_path=self.directory,
+                        zip_path=Config.download_path,
+                    )
                 except Exception:
                     logger.error(f"Unable to remove input file {original_file}")
-
-            FileService.prepare_zip(
-                zip_filename=self.directory.split("/")[-1],
-                folder_path=self.directory,
-                zip_path=Config.download_path,
-            )
-        except Exception as error:
-            logger.error(f"Processor : prepare_result: {error}")
-            raise error
-
-    def cleaned_file_prepare_result(self):
-        try:
-            logger.info(
-                "combining all reports, original file and malicious file to a zip"
-            )
-
-            #malware_zip_name = self.directory + "/" + self.hash + ".zip"
-            ext = self.ext if self.ext is not None else ""
-            real_name = self.filename + "." + ext
-            original_file = self.directory + "/" + real_name
-            os.rename(self.file_path, original_file)
-            # pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
-            # try:
-            #     os.remove(original_file)
-            # except Exception:
-            #     logger.error(f"Unable to remove input file {original_file}")
-            FileService.prepare_zip(
-                zip_filename=self.directory.split("/")[-1],
-                folder_path=self.directory,
-                zip_path=Config.download_path,
-            )
         except Exception as error:
             logger.error(f"Processor : prepare_result: {error}")
             raise error
 
     def upload(self):
         try:
-            logger.info("uploading to minio")
-            name = self.directory.split("/")[-1]
-            self.minio.upload(
-                file_path=Config.download_path + "/" + name + ".zip",
-                bucket_name="processed",
-                file_name=self.hash + ".zip",
-            )
-        except Exception as error:
-            logger.error(f"Processor : upload error: {error}")
-            raise error
-
-    def clean_file_upload(self):
-        try:
-            logger.info("uploading clean folder to minio")
-            _files = os.listdir(self.directory)
-            for f in _files:
+            if not self.isMalicious==False:
+                logger.info("uploading to minio")
+                name = self.directory.split("/")[-1]
                 self.minio.upload(
-                    file_path=self.directory+ "/" +f,
+                    file_path=Config.download_path + "/" + name + ".zip",
                     bucket_name="processed",
-                    file_name=self.hash+"/"+f,
+                    file_name=self.hash + ".zip",
                 )
+            else:
+                logger.info("Uploading clean folder to minio")
+                _files = os.listdir(self.directory)
+                for f in _files:
+                    self.minio.upload(
+                        file_path=self.directory + "/" + f,
+                        bucket_name="processed",
+                        file_name=self.hash + "/" + f,
+                    )
+
         except Exception as error:
             logger.error(f"Processor : upload error: {error}")
             raise error
 
     def send_mq(self):
         try:
-            logger.info("sending file to rabbitmq for s3 sync, %s" % self.directory)
+            logger.info("Sending file to rabbitmq for s3 sync, %s" % self.directory)
             name = self.directory.split("/")[-1]
-            # if self.isMalicious==False:
-            #     payload = {
-            #         "s3_bucket": self.ext,
-            #         "minio_bucket": "processed",
-            #         "file": self.hash + "/" + "metadata_" + self.hash + ".json",
-            #     }
-            # else:
-            payload = {
-                "s3_bucket": self.ext,
-                "minio_bucket": "processed",
-                "file": name + ".zip",
-            }
-            response = MQService.send(payload)
+
+            if self.isMalicious==False:
+
+                payload = {
+                    "s3_bucket": self.ext,
+                    "minio_bucket": "processed",
+                    "folder": self.hash + "/",
+                    "file": self.original_name.split("/")[-1],
+                    "metadata_name": "metadata_" + self.hash + ".json",
+                    "rebuild_xml":self.gw_rebuild_xml_name,
+                    "rebuild_file":self.gw_rebuild_file_name,
+                }
+            else:
+                payload = {
+                    "s3_bucket": self.ext,
+                    "minio_bucket": "processed",
+                    "file": name + ".zip",
+                }
+            response = MQService.send(payload,self.isMalicious)
             meta = self.metadata
             meta['path'] = None
             logger.info(f's3 sync status : {response.status_code}')
             if response.status_code == 200:
-                meta['path'] = self.ext + "/" + name + ".zip"
-                # if self.isMalicious == False:
-                #     meta['path']=self.ext +"/"+ self.hash
-                #
-                # else:
+                #meta['path'] = self.ext + "/" + name + ".zip"
+                if self.isMalicious == False:
+                    meta['path']=self.ext +"/"+ self.hash
+                else:
+                    meta['path'] = self.ext + "/" + name + ".zip"
                 logger.info(f"s3 upload_path : { meta['path']}")
                 self.metadata = meta
             try:
@@ -415,7 +407,6 @@ class Processor:
             db.session.commit()
         except Exception as ex:
             logger.error(f'Error while posting to DB{ex}')
-
 
 def create_app():
     app = Flask(__name__)

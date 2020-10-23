@@ -1,4 +1,6 @@
 import os
+import shutil
+
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
@@ -73,6 +75,66 @@ def sync_to_s3():
 
     return jsonify({"message": ""})
 
+
+@app.route("/folder_tos3", methods=["POST"])
+def sync_folder_to_s3():
+    if not os.path.exists(Config.download_path):
+        os.makedirs(Config.download_path)
+
+    file_to_fetch = request.json
+
+    if not "s3_bucket" in file_to_fetch:
+        return validation_error("s3_bucket parameter is missing!")
+
+    if not "minio_bucket" in file_to_fetch:
+        return validation_error("minio_bucket parameter is missing!")
+
+    if not "file" in file_to_fetch:
+        return validation_error("file parameter is missing!")
+
+    minio_client = MinioClient(Config.MINIO_URL, Config.MINIO_ACCESS_KEY, Config.MINIO_SECRET_KEY)
+    s3_client = S3Client(Config.S3_URL, Config.S3_ACCESS_KEY, Config.S3_SECRET_KEY)
+    try:
+
+        folder_name=file_to_fetch['folder']
+        file_name=file_to_fetch['file']
+        metadata_name=file_to_fetch['metadata_name']
+        rebuild_xml=file_to_fetch['rebuild_xml']
+        rebuild_file=file_to_fetch['rebuild_file']
+
+        files=[]
+        files.extend([file_name,metadata_name,rebuild_xml,rebuild_file,])
+        for f in files:
+            if f:
+                logger.info(f"file {f} to be uploaded to s3 in folder {folder_name}")
+                folder_path=Config.download_path+"/"+folder_name.split("/")[0]
+                if not os.path.exists(folder_path):
+                    os.makedirs(Config.download_path+"/"+folder_name.split("/")[0])
+                file_from_minio = minio_client.download_files(bucket_name=file_to_fetch['minio_bucket'],
+                                                          file_name=folder_name+f,
+                                                          download_path=Config.download_path)
+                logger.info(f'file_from_minio : {file_from_minio}')
+                s3_client.upload_file(file_path=file_from_minio, file_name=folder_name+f,
+                                      bucket=file_to_fetch['s3_bucket'])
+                logger.info(f's3 path : {folder_name}{f}')
+                try:
+                    shutil.rmtree(folder_path)
+                except Exception as err:
+                    logger.error((f'Error while deleted download upload path'))
+                    raise err
+    except Exception as err:
+        logger.error(f'create_app: file_from_minio {err}')
+        return validation_error(str(err))
+
+    try:
+        # bucket_name=file_to_fetch['s3_bucket'], # use later
+        add_to_db(filename=file_to_fetch['folder'], path=file_to_fetch['s3_bucket'])
+    except Exception as err:
+        logger.error(f'create_app: s3_client {err}')
+        return validation_error(str(err))
+
+    return jsonify({"message": ""})
+
 @app.route("/files", methods=["GET"])
 def get_files():
     output = []
@@ -102,10 +164,11 @@ def sync_from_s3():
     if files:
         files = files.get('Contents', [])
         for file in files:
-            # print(file['Key'])
             filename = file['Key'].split("/")[-1]
             add_to_db(filename=filename, path=file_type)
 
     return jsonify({})
+
+
 
 

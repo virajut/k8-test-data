@@ -28,7 +28,7 @@ class GovUKFileMigration:
                                                   "bucket_name": Config.S3_BUCKET,
                                                   "sub_dir": Config.S3_SUB_FOLDER_PREFIX
                                               })
-            print("kkskksks")
+
             print(s3_bucket_list_obj)
             if s3_bucket_list_obj.status_code==200:
                 logger.info(s3_bucket_list_obj)
