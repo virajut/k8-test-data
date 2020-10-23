@@ -41,7 +41,8 @@ class Processor:
         self.isMalicious = None
         self.metadata = {}
         self.rebuild_hash = None
-        self.minio_meta = None
+        self.minio_meta=None
+
 
     def get_files(self, filename):
         files = []
@@ -53,7 +54,9 @@ class Processor:
         self.minio.download_files(
             bucket_name=ext, file_name=filename, download_path=Config.download_path
         )
+
         self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
+        logger.info(f'minio metadata : {self.minio_meta}')
 
         if ext == "zip":
             FileService.unzip(Config.download_path + "/" + filename, self.directory)
@@ -103,9 +106,7 @@ class Processor:
 
     def check_virustotal(self):
         try:
-            if 'x-amz-meta-malicious' in self.minio_meta.metadata:
-                self.isMalicious = literal_eval(self.minio_meta.metadata['x-amz-meta-malicious'])
-                logger.info(f"isMalicious : {self.isMalicious}")
+            logger.info(f"isMalicious : {self.isMalicious}")
             if not self.isMalicious == False:
                 logger.info("checking malicious with VirusTotal")
                 time.sleep(30)
@@ -224,27 +225,49 @@ class Processor:
             logger.info(
                 "combining all reports, original file and malicious file to a zip"
             )
-
             malware_zip_name = self.directory + "/" + self.hash + ".zip"
             ext = self.ext if self.ext is not None else ""
             real_name = self.filename + "." + ext
             original_file = self.directory + "/" + real_name
             os.rename(self.file_path, original_file)
-            # zipfile.ZipFile(malware_zip_name, mode="w").write(
-            #     original_file, basename(original_file)
-            # )
-            pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
-            try:
-                os.remove(original_file)
-            except Exception:
-                logger.error(f"Unable to remove input file {original_file}")
+
+            if not self.isMalicious==False:
+                pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
+                try:
+                    os.remove(original_file)
+                except Exception:
+                    logger.error(f"Unable to remove input file {original_file}")
 
             FileService.prepare_zip(
                 zip_filename=self.directory.split("/")[-1],
                 folder_path=self.directory,
                 zip_path=Config.download_path,
             )
+        except Exception as error:
+            logger.error(f"Processor : prepare_result: {error}")
+            raise error
 
+    def cleaned_file_prepare_result(self):
+        try:
+            logger.info(
+                "combining all reports, original file and malicious file to a zip"
+            )
+
+            #malware_zip_name = self.directory + "/" + self.hash + ".zip"
+            ext = self.ext if self.ext is not None else ""
+            real_name = self.filename + "." + ext
+            original_file = self.directory + "/" + real_name
+            os.rename(self.file_path, original_file)
+            # pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
+            # try:
+            #     os.remove(original_file)
+            # except Exception:
+            #     logger.error(f"Unable to remove input file {original_file}")
+            FileService.prepare_zip(
+                zip_filename=self.directory.split("/")[-1],
+                folder_path=self.directory,
+                zip_path=Config.download_path,
+            )
         except Exception as error:
             logger.error(f"Processor : prepare_result: {error}")
             raise error
@@ -262,23 +285,47 @@ class Processor:
             logger.error(f"Processor : upload error: {error}")
             raise error
 
+    def clean_file_upload(self):
+        try:
+            logger.info("uploading clean folder to minio")
+            _files = os.listdir(self.directory)
+            for f in _files:
+                self.minio.upload(
+                    file_path=self.directory+ "/" +f,
+                    bucket_name="processed",
+                    file_name=self.hash+"/"+f,
+                )
+        except Exception as error:
+            logger.error(f"Processor : upload error: {error}")
+            raise error
+
     def send_mq(self):
         try:
             logger.info("sending file to rabbitmq for s3 sync, %s" % self.directory)
             name = self.directory.split("/")[-1]
+            # if self.isMalicious==False:
+            #     payload = {
+            #         "s3_bucket": self.ext,
+            #         "minio_bucket": "processed",
+            #         "file": self.hash + "/" + "metadata_" + self.hash + ".json",
+            #     }
+            # else:
             payload = {
                 "s3_bucket": self.ext,
                 "minio_bucket": "processed",
                 "file": name + ".zip",
             }
             response = MQService.send(payload)
-
             meta = self.metadata
             meta['path'] = None
             logger.info(f's3 sync status : {response.status_code}')
             if response.status_code == 200:
                 meta['path'] = self.ext + "/" + name + ".zip"
-                logger.info(f"s3 upload_path : {meta['path']}")
+                # if self.isMalicious == False:
+                #     meta['path']=self.ext +"/"+ self.hash
+                #
+                # else:
+                logger.info(f"s3 upload_path : { meta['path']}")
                 self.metadata = meta
             try:
                 logger.info("Posting file information to DB")
@@ -319,21 +366,39 @@ class Processor:
             (self.prepare_result, default_exceptions),
             (self.upload, default_exceptions),
             (self.send_mq, default_exceptions),
-            (self.upload_original_file_to_s3, default_exceptions),
         ]
 
+        clean_file_processes = [
+            (self.rebuild_glasswall, default_exceptions),
+            (self.get_metadata, default_exceptions),
+            (self.prepare_result, default_exceptions),
+            (self.upload, default_exceptions),
+            (self.send_mq, default_exceptions),
+        ]
         files = self.get_files(input_file)
+        if self.minio_meta:
+            if 'x-amz-meta-malicious' in self.minio_meta.metadata:
+                self.isMalicious = literal_eval(self.minio_meta.metadata['x-amz-meta-malicious'])
         logger.info("total files : {}".format(len(files)))
         logger.info(files)
         for f in files:
             logger.info(f"processing {f}")
             self.set_current_file(f)
-            for proc, exceptions in processes:
-                try:
-                    proc()
-                except exceptions as e:
-                    logger.error(f"Error processing file {f} : " + str(e))
-                    break
+
+            if self.isMalicious==False:
+                for proc, exceptions in clean_file_processes:
+                    try:
+                        proc()
+                    except exceptions as e:
+                        logger.error(f"Error processing file {f} : " + str(e))
+                        break
+            else:
+                for proc, exceptions in processes:
+                    try:
+                        proc()
+                    except exceptions as e:
+                        logger.error(f"Error processing file {f} : " + str(e))
+                        break
 
     def add_metadata_to_db(self, metadata):
         f = FileInfo(filename=metadata['file_name'], path=metadata['path'], size=metadata['size'],
