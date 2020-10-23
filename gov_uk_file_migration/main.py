@@ -148,6 +148,7 @@ class GovUKFileMigration:
 
         logger.info("GovUKFileMigration::upload_to_minio Uploading %s present at %s "
                     "to minio bucket %s" % (file_name, file_path, bucket_name))
+        _client=None
         try:
             _client = Minio(endpoint=Config.MINIO_ENDPOINT,
                             access_key=Config.MINIO_ACCESS_KEY,
