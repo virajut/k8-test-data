@@ -1,6 +1,7 @@
 import hashlib
 import logging as logger
 import os
+import shutil
 import time
 from pathlib import Path
 from ast import literal_eval
@@ -50,7 +51,15 @@ class Processor:
     def get_files(self, filename):
         files = []
         self.filename = filename
-        name, ext = self.filename.split(".")
+        lst=self.filename.split(".")
+        if len(lst)==3:
+            name= self.filename.split(".")[0]
+            ext = self.filename.split(".")[2]
+        elif len(lst)==2:
+            name, ext = self.filename.split(".")
+        else:
+            ext=None
+            name = self.filename
         self.bucket_name = ext
         logger.info(f"downloading file {filename} from minio")
         self.directory = Config.download_path + "/" + name
@@ -245,6 +254,7 @@ class Processor:
             self.original_name=original_file
             os.rename(self.file_path, original_file)
             logger.info(f"original file {original_file}")
+          
             if not self.isMalicious==False:
                 malware_zip_name = self.directory + "/" + self.hash + ".zip"
                 pyminizip.compress(original_file, None, malware_zip_name, 'infected', 5)
@@ -257,6 +267,7 @@ class Processor:
                     )
                 except Exception:
                     logger.error(f"Unable to remove input file {original_file}")
+
         except Exception as error:
             logger.error(f"Processor : prepare_result: {error}")
             raise error
@@ -325,6 +336,11 @@ class Processor:
             except Exception as err:
                 logger.error(f"Error while posting data to DB {err}")
                 raise err
+            try:
+                self.delete_folder(self.directory)
+            except Exception as err:
+                logger.error("Error while deleting")
+                raise err
 
         except Exception as error:
             logger.error(f"Processor : send_mq: {error}")
@@ -345,6 +361,15 @@ class Processor:
         except Exception as error:
             logger.error(f"Process : upload_original_file_to_s3 : {error}")
             raise error
+
+    def delete_folder(self,path):
+        try:
+            logger.info("File Processing : Done")
+            logger.info(f"deleting  : {path}")
+            shutil.rmtree(self.directory)
+        except Exception as err:
+            logger.error((f'Error while deleted download upload path'))
+            raise err
 
     def process(self, input_file):
         logger.info(f"processing Main file : {input_file}")
