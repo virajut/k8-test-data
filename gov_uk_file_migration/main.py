@@ -91,22 +91,27 @@ class GovUKFileMigration:
             raise e
 
         # remove the created byte text file
-        if os.path.exists(byte_file_name):
-            os.remove(byte_file_name)
+        try:
+            if os.path.exists(byte_file_name):
+                os.remove(byte_file_name)
+        except Exception as err:
+            raise err
 
         return downloaded_file_path
 
     @staticmethod
     def get_bucket_name(path):
-
-        # extract file stats and return bucket name
-        extension = path.split("/")[-1].split('.')[-1]
-        if extension:
-            bucket_name = extension.lower()
-        else:
-            bucket_name = 'hash'
-
-        return bucket_name
+        bucket_name="miscellaneous"
+        try:
+            # extract file stats and return bucket name
+            extension = path.split("/")[-1].split('.')[-1]
+            if extension:
+                bucket_name = extension.lower()
+            else:
+                bucket_name = 'hash'
+            return bucket_name
+        except:
+            return bucket_name
 
     def preprocess_files(self, file):
         try:
@@ -199,12 +204,9 @@ if __name__ == '__main__':
 
         # iterate over each file and download
         for file_idx in range(1, len(file_list)):
-
             download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
-
             # pass the file to file processor as it downloads
             migration_obj.preprocess_files(download_path)
-            
     except Exception as err:
         logger.info("Error in main")
         raise err
