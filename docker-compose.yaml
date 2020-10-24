@@ -51,7 +51,6 @@ services:
       - gw_crawler/.env
     ports:
       - 6800:6800
-      - 6801:6801
 
   glasswall-crawler:
     image: glasswallcrawler:1.0

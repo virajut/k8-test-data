@@ -144,8 +144,17 @@ def create_app():
         content = request.args
         bucket_name = content["bucket_name"]
         sub_dir = content["sub_dir"]
+        receiver = content.get("receiver", False)
+        logger.info("content: %s | is_receiver: %s" % (content, receiver))
+        if receiver:
+            s3_client_target = S3Client(os.environ["S3_TARGET_ENDPOINT"],
+                                        os.environ["S3_TARGET_ACCESS_KEY_ID"],
+                                        os.environ["S3_TARGET_SECRET_ACCESS_KEY"])
 
-        file_list = s3_client.list_s3_bucket_files(bucket_name, sub_dir)
+            file_list = s3_client_target.list_s3_bucket_files(bucket_name, sub_dir)
+
+        else:
+            file_list = s3_client.list_s3_bucket_files(bucket_name, sub_dir)
 
         response = {
             "file_list": file_list,
