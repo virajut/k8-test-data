@@ -108,28 +108,31 @@ class GovUKFileMigration:
         return bucket_name
 
     def preprocess_files(self, file):
-
-        # 1. extract meta data of the file
-        bucket_name = GovUKFileMigration.get_bucket_name(file)
-        file_name = file.split('/')[-1]
-
-        logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
-                    " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
-
         try:
-            # 2. upload the file to minio before passing it to processor.
-            metadata = {"malicious": False}
-            GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name,
-                                               metadata=metadata)
-        except Exception as e:
-            logger.info("GovUKFileMigration::preprocess_files Got error {} "
-                        "while uploading to minio.".format(e))
-            raise e
 
-        # 3. pass received file to file processor
-        processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
-        logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
-                    "file %s and bucket name %s" % (processor_response, file, bucket_name))
+            # 1. extract meta data of the file
+            bucket_name = GovUKFileMigration.get_bucket_name(file)
+            file_name = file.split('/')[-1]
+
+            logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
+                        " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
+
+            try:
+                # 2. upload the file to minio before passing it to processor.
+                metadata = {"malicious": False}
+                GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name,
+                                                   metadata=metadata)
+            except Exception as e:
+                logger.info("GovUKFileMigration::preprocess_files Got error {} "
+                            "while uploading to minio.".format(e))
+                raise e
+
+            # 3. pass received file to file processor
+            processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
+            logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
+                        "file %s and bucket name %s" % (processor_response, file, bucket_name))
+        except Exception as err:
+            logger.error(f"preprocess_files {err}")
 
     @staticmethod
     def upload_to_minio(bucket_name, file_name, file_path, metadata):

@@ -62,69 +62,76 @@ class Processor:
         else:
             ext=None
             name = self.filename
-        self.bucket_name = ext
-        logger.info(f"downloading file {filename} from minio")
-        self.directory = Config.download_path + "/" + name
-        self.minio.download_files(
-            bucket_name=ext, file_name=filename, download_path=Config.download_path
-        )
-        self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
-        logger.info(f'minio metadata : {self.minio_meta}')
+        if ext:
+            self.bucket_name = ext
+            logger.info(f"downloading file {filename} from minio")
+            self.directory = Config.download_path + "/" + name
+            self.minio.download_files(
+                bucket_name=ext, file_name=filename, download_path=Config.download_path
+            )
+            self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
+            logger.info(f'minio metadata : {self.minio_meta}')
 
-        if ext == "zip":
-            FileService.unzip(Config.download_path + "/" + filename, self.directory)
-            _files = os.listdir(self.directory)
-            if not _files:
-                logger.error("no file inside zip")
+            if ext == "zip":
+                FileService.unzip(Config.download_path + "/" + filename, self.directory)
+                _files = os.listdir(self.directory)
+                if not _files:
+                    logger.error("no file inside zip")
+                else:
+                    for f in _files:
+                        files.append(self.directory + "/" + f)
             else:
-                for f in _files:
-                    files.append(self.directory + "/" + f)
-        else:
-            files.append(Config.download_path + "/" + filename)
+                files.append(Config.download_path + "/" + filename)
 
-        return files
+            return files
+        else:
+            return None
 
     def set_current_file(self, file_path):
-        logger.info(f"setting current file {file_path}")
-        _dir, filename = file_path.rsplit("/", 1)
-
         try:
-            list=filename.split(".")
-            if len(list)==3:
-                self.filename=list[0]
-                self.ext=list[2]
-            elif len(list)==2:
-                self.filename, self.ext = filename.split(".")
-            else:
+            logger.info(f"setting current file {file_path}")
+            _dir, filename = file_path.rsplit("/", 1)
+
+            try:
+                list=filename.split(".")
+                if len(list)==3:
+                    self.filename=list[0]
+                    self.ext=list[2]
+                elif len(list)==2:
+                    self.filename, self.ext = filename.split(".")
+                else:
+                    self.filename = filename
+                    self.ext = None
+
+            except Exception:
                 self.filename = filename
                 self.ext = None
+            if self.ext:
+                # convert file to hash
+                with open(file_path, mode='rb') as file:  # b is important -> binary
+                    fileContent = file.read()
 
-        except Exception:
-            self.filename = filename
-            self.ext = None
+                original_hash = hashlib.sha1(fileContent).hexdigest()
+                self.hash = original_hash
+                logger.info(f""
+                            f" : {original_hash}")
+                # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
 
-        # convert file to hash
-        with open(file_path, mode='rb') as file:  # b is important -> binary
-            fileContent = file.read()
+                # Create directory for this file
+                self.directory = _dir + "/" + self.hash
+                Path(self.directory).mkdir(parents=True, exist_ok=True)
 
-        original_hash = hashlib.sha1(fileContent).hexdigest()
-        self.hash = original_hash
-        logger.info(f""
-                    f" : {original_hash}")
-        # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
+                # Move current file to it's own directory
+                if self.ext:
+                    self.file_path = self.directory + "/" + self.hash + "." + self.ext
+                else:
+                    self.file_path = self.directory + "/" + self.hash
 
-        # Create directory for this file
-        self.directory = _dir + "/" + self.hash
-        Path(self.directory).mkdir(parents=True, exist_ok=True)
-
-        # Move current file to it's own directory
-        if self.ext:
-            self.file_path = self.directory + "/" + self.hash + "." + self.ext
-        else:
-            self.file_path = self.directory + "/" + self.hash
-
-        logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
-        os.rename(file_path, self.file_path)
+                logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
+                os.rename(file_path, self.file_path)
+        except Exception as err:
+            logger.info("errro in setting path")
+            raise err
 
     def check_virustotal(self):
         try:
@@ -401,34 +408,36 @@ class Processor:
                 self.isMalicious = literal_eval(self.minio_meta.metadata['x-amz-meta-malicious'])
         logger.info("total files : {}".format(len(files)))
         logger.info(files)
-        for f in files:
-            logger.info(f"processing {f}")
-            self.set_current_file(f)
+        if files:
+            for f in files:
+                logger.info(f"processing {f}")
+                self.set_current_file(f)
 
-            if self.isMalicious==False:
-                for proc, exceptions in clean_file_processes:
-                    try:
-                        proc()
-                    except exceptions as e:
-                        logger.error(f"Error processing file {f} : " + str(e))
-                        break
-            else:
-                for proc, exceptions in processes:
-                    try:
-                        proc()
-                    except exceptions as e:
-                        logger.error(f"Error processing file {f} : " + str(e))
-                        break
+                if self.isMalicious==False:
+                    for proc, exceptions in clean_file_processes:
+                        try:
+                            proc()
+                        except exceptions as e:
+                            logger.error(f"Error processing file {f} : " + str(e))
+                            break
+                else:
+                    for proc, exceptions in processes:
+                        try:
+                            proc()
+                        except exceptions as e:
+                            logger.error(f"Error processing file {f} : " + str(e))
+                            break
 
     def add_metadata_to_db(self, metadata):
-        f = FileInfo(filename=metadata['file_name'], path=metadata['path'], size=metadata['size'],
-                     type=metadata['extension'], isMalicious=metadata['isMalicious'],
-                     original_hash=metadata['original_hash'], rebuild_hash=metadata['rebuild_hash'],
-                     date_created=metadata['date_created'],
-                     virus_total_status=metadata['virus_total_status'],
-                     gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],
-                     gw_rebuild_file_status=metadata['gw_rebuild_file_status'])
         try:
+            f = FileInfo(filename=metadata['file_name'], path=metadata['path'], size=metadata['size'],
+                         type=metadata['extension'], isMalicious=metadata['isMalicious'],
+                         original_hash=metadata['original_hash'], rebuild_hash=metadata['rebuild_hash'],
+                         date_created=metadata['date_created'],
+                         virus_total_status=metadata['virus_total_status'],
+                         gw_rebuild_xml_status=metadata['gw_rebuild_xml_status'],
+                         gw_rebuild_file_status=metadata['gw_rebuild_file_status'])
+
             logger.info("Posting metadat to DB")
             logger.info(f'File Name {f}')
             db.session.add(f)
