@@ -102,8 +102,10 @@ class GovUKFileMigration:
         extension = path.split("/")[-1].split('.')[-1]
         if extension:
             bucket_name = extension.lower()
+            if len(bucket_name) > 62 or len(bucket_name) < 4:
+                bucket_name = 'miscellaneous'
         else:
-            bucket_name = 'hash'
+            bucket_name = 'miscellaneous'
 
         return bucket_name
 
