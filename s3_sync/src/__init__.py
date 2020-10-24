@@ -126,7 +126,7 @@ def sync_folder_to_s3():
                 logger.info(f's3 path : {folder_name}{f}')
                 logger.info(f"deleting object {file_to_fetch['minio_bucket']}/{folder_name+f}")
                 minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'],object_name=folder_name+f)
-                logger.info(f"Deleted object {folder_name+f}")
+                logger.info(f"Deleted object {folder_name}/{f}")
 
                 try:
                     shutil.rmtree(folder_path)
@@ -134,13 +134,22 @@ def sync_folder_to_s3():
                     logger.error((f'Error while deleted download upload path'))
                     raise err
         try:
-            if file_to_fetch['file']:
-                file=file_to_fetch['file']
-                minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'], object_name=folder_name + "/")
-                minio_client.delete_file(bucket_name=file.split["."][-1], object_name=file)
+            file = file_name
+            logger.info(f"Deleting object {file}")
+            minio_client.delete_file(bucket_name=file_to_fetch['s3_bucket'], object_name=file)
+            logger.info(f"Deleted object {file}")
         except Exception as err:
             logger.error("error while deleting original file")
             raise err
+
+        try:
+            logger.info(f"Deleting object {file}")
+            minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'], object_name=folder_name)
+            logger.info(f"Deleted folder {folder_name}")
+        except Exception as err:
+            logger.error("error while deleting original folder")
+            raise err
+
     except Exception as err:
         logger.error(f'create_app: file_from_minio {err}')
         return validation_error(str(err))
