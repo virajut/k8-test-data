@@ -1,12 +1,11 @@
 import os
 import json
-import logging
+import logging as logger
 import requests
 from minio import Minio
 from .src.config import Config
 
-
-logger = logging.getLogger("GW:s3")
+logger.basicConfig(level=logger.INFO)
 
 
 class GovUKFileMigration:
@@ -23,6 +22,7 @@ class GovUKFileMigration:
 
         try:
             file_list=[]
+            # file_list = {}
             s3_bucket_list_obj = requests.get(Config.S3_LIST_BUCKET_FILES_URL,
                                               params={
                                                   "bucket_name": Config.S3_BUCKET,
@@ -70,7 +70,7 @@ class GovUKFileMigration:
     def recreate_file(self, byte_content, file_name):
 
         # store pdf bytes to txt
-        byte_file_name = file_name.split('.')[0]+'.txt'
+        byte_file_name = file_name.split('.')[0] + '.txt'
         downloaded_file_path = os.path.join(Config.LOCAL_REPO_PATH, file_name)
         try:
             file = open(byte_file_name, 'wb')
@@ -91,71 +91,62 @@ class GovUKFileMigration:
             raise e
 
         # remove the created byte text file
-        try:
-            if os.path.exists(byte_file_name):
-                os.remove(byte_file_name)
-        except Exception as err:
-            raise err
+        if os.path.exists(byte_file_name):
+            os.remove(byte_file_name)
 
         return downloaded_file_path
 
     @staticmethod
     def get_bucket_name(path):
-        bucket_name="miscellaneous"
-        try:
-            # extract file stats and return bucket name
-            extension = path.split("/")[-1].split('.')[-1]
-            if extension:
-                bucket_name = extension.lower()
-            else:
-                bucket_name = 'hash'
-            return bucket_name
-        except:
-            return bucket_name
+
+        # extract file stats and return bucket name
+        extension = path.split("/")[-1].split('.')[-1]
+        logger.info(f"Extension of file {extension}")
+        if extension:
+            bucket_name = extension.lower()
+            if len(bucket_name) > 62:
+                bucket_name = 'miscellaneous'
+        else:
+            bucket_name = 'miscellaneous'
+        logger.info(f"Bucket_name for minio upload  {bucket_name}")
+        return bucket_name
 
     def preprocess_files(self, file):
         try:
+
             # 1. extract meta data of the file
             bucket_name = GovUKFileMigration.get_bucket_name(file)
             file_name = file.split('/')[-1]
 
             logger.info("GovUKFileMigration::preprocess_files Iterating file: %s |"
                         " Bucket Name: %s | Filename: %s" % (file, bucket_name, file_name))
-            # 2. upload the file to minio before passing it to processor.
-            metadata={"malicious": False }
-            try:
-                if (len(bucket_name)>62 or len(bucket_name)<4):
-                    bucket_name="miscellaneous"
-                else:
-                    GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name,metadata=metadata)
-            except:
-                pass
-        except Exception as e:
-            logger.info("GovUKFileMigration::preprocess_files Got error {} "
-                        "while uploading to minio.".format(e))
-            raise e
 
-        # 3. pass received file to file processor
-        try:
+            try:
+                # 2. upload the file to minio before passing it to processor.
+                metadata = {"malicious": False}
+                GovUKFileMigration.upload_to_minio(bucket_name=bucket_name, file_path=file, file_name=file_name,
+                                                   metadata=metadata)
+            except Exception as e:
+                logger.info("GovUKFileMigration::preprocess_files Got error {} "
+                            "while uploading to minio.".format(e))
+                raise e
+
+            # 3. pass received file to file processor
             processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
             logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
                         "file %s and bucket name %s" % (processor_response, file, bucket_name))
-        except:
-            pass
+        except Exception as err:
+            logger.error(f"preprocess_files {err}")
 
     @staticmethod
-    def upload_to_minio(bucket_name, file_name, file_path,metadata):
+    def upload_to_minio(bucket_name, file_name, file_path, metadata):
 
         logger.info("GovUKFileMigration::upload_to_minio Uploading %s present at %s "
                     "to minio bucket %s" % (file_name, file_path, bucket_name))
-        _client=None
-        try:
-            _client = Minio(endpoint=Config.MINIO_ENDPOINT,
-                            access_key=Config.MINIO_ACCESS_KEY,
-                            secret_key=Config.MINIO_SECRET_KEY,
-                            secure=False)
-        except Exception as err:
-            logger.error(f"upload_to_minio exception {err}")
+        _client = Minio(endpoint=Config.MINIO_ENDPOINT,
+                        access_key=Config.MINIO_ACCESS_KEY,
+                        secret_key=Config.MINIO_SECRET_KEY,
+                        secure=False)
 
         if not _client.bucket_exists(bucket_name):
             _client.make_bucket(bucket_name=bucket_name)
@@ -164,7 +155,7 @@ class GovUKFileMigration:
         try:
             _client.fput_object(bucket_name=bucket_name,
                                 object_name=file_name,
-                                file_path=file_path,metadata=metadata)
+                                file_path=file_path, metadata=metadata)
             logger.info(f"GovUKFileMigration::upload_to_minio Uploaded file {file_name}")
         except Exception as e:
             logger.error("GovUKFileMigration::upload_to_minio Got error while uploaing to minio %s" % e)
@@ -177,7 +168,6 @@ class GovUKFileMigration:
             "file": file.split('/')[-1],
             "bucket": bucket_name
         }
-
         try:
             file_processor_api = os.environ.get('file_processor_api', None)
             fp_response = requests.post(file_processor_api, json=payload)
@@ -194,16 +184,15 @@ class GovUKFileMigration:
 
 if __name__ == '__main__':
 
+    # create compression obj
+    migration_obj = GovUKFileMigration()
+
+    # get file list from sub directory
+    file_list = migration_obj.get_file_list()
+    logger.info("GovUKFileMigration::__main__ Number of files from gov-uk bucket: {}".format(len(file_list)))
+
+    # get all files already downloaded
     try:
-
-        # create compression obj
-        migration_obj = GovUKFileMigration()
-
-        # get file list from sub directory
-        file_list = migration_obj.get_file_list()
-        logger.info("GovUKFileMigration::__main__ Number of files from gov-uk bucket: {}".format(len(file_list)))
-
-        # get all files already downloaded
         s3_bucket_target_list_obj = requests.get(Config.S3_LIST_BUCKET_FILES_URL,
                                                  params={
                                                      "bucket_name": os.environ["S3_TARGET_BUCKET"],
@@ -215,22 +204,33 @@ if __name__ == '__main__':
         result = s3_bucket_target_list_obj.json()
         download_file_list = json.loads(result)["file_list"]
         logger.info("Downloaded file list from icap bucket: %s" % download_file_list)
-        # iterate over each file and download
-        for file_idx in range(1, len(file_list)):
-            try:
-                if any(file_list[file_idx].split('/')[-1] in dwld_file for dwld_file in download_file_list):
-                    logger.info("Already downloaded: %s" % file_list[file_idx])
-                    continue
-            except Exception as e:
-                logger.error(e)
+    except Exception as e:
+        logger.error(e)
+        download_file_list = []
 
-            logger.info("This will be downloaded: %s" % file_list[file_idx])
-            download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
-            # pass the file to file processor as it downloads
-            migration_obj.preprocess_files(download_path)
-    except Exception as err:
-        logger.info("Error in main")
-        raise err
+    # iterate over each file and download
+    for file_idx in range(1, len(file_list)):
+
+        try:
+            if any(file_list[file_idx].split('/')[-1] in dwld_file for dwld_file in download_file_list):
+                logger.info("Already downloaded: %s" % file_list[file_idx])
+                continue
+        except Exception as e:
+            logger.error(e)
+
+        logger.info("This will be downloaded: %s" % file_list[file_idx])
+
+        # download file which is not in icap bucket list
+        download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
+        logger.info(f"download_path of preprocess_files : {download_path}")
+
+        # pass the file to file processor as it downloads
+        migration_obj.preprocess_files(download_path)
+
+    # except Exception as err:
+    #     logger.info("Error in main")
+    #     raise err
+        # pass the file to file processor as it downloads
 
 
 

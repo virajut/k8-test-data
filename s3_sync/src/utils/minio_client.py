@@ -33,3 +33,20 @@ class MinioClient:
                 logger.info(e)
                 raise
         return path
+
+
+    def delete_file(self,bucket_name,object_name):
+
+        try:
+            logger.info(f"deleting object {bucket_name} /{object_name}")
+            obj = self.s3.Object(bucket_name, object_name)
+            obj.delete()
+            logger.info(f"deleted {object_name}")
+
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                logger.info("The object does not exist.")
+            else:
+                logger.info(e)
+                raise
+

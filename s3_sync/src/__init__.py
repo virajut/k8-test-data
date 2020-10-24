@@ -69,6 +69,13 @@ def sync_to_s3():
         # bucket_name=file_to_fetch['s3_bucket'], # use later
         s3_client.upload_file(file_path=file_from_minio, file_name=file_to_fetch['file'], bucket=file_to_fetch['s3_bucket'])
         add_to_db(filename=file_to_fetch['file'], path=file_to_fetch['s3_bucket'])
+        logger.info(f"deleting object {file_to_fetch['minio_bucket']} /{file_to_fetch['file']}")
+        minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'], object_name=file_to_fetch['file'])
+        logger.info(f"Deleted {file_to_fetch['file']}")
+        original_name = file_to_fetch['original_file']
+        logger.info(f"deleting object {file_to_fetch['s3_bucket']} /{file_to_fetch['original_file']}")
+        minio_client.delete_file(bucket_name=file_to_fetch['s3_bucket'], object_name=file_to_fetch['original_file'])
+        logger.info(f"Deleted {file_to_fetch['file']}")
     except Exception as err:
         logger.error(f'create_app: s3_client {err}')
         return validation_error(str(err))
@@ -117,11 +124,23 @@ def sync_folder_to_s3():
                 s3_client.upload_file(file_path=file_from_minio, file_name=folder_name+f,
                                       bucket=file_to_fetch['s3_bucket'])
                 logger.info(f's3 path : {folder_name}{f}')
+                logger.info(f"deleting object {file_to_fetch['minio_bucket']}/{folder_name+f}")
+                minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'],object_name=folder_name+f)
+                logger.info(f"Deleted object {folder_name+f}")
+
                 try:
                     shutil.rmtree(folder_path)
                 except Exception as err:
                     logger.error((f'Error while deleted download upload path'))
                     raise err
+        try:
+            if file_to_fetch['file']:
+                file=file_to_fetch['file']
+                minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'], object_name=folder_name + "/")
+                minio_client.delete_file(bucket_name=file.split["."][-1], object_name=file)
+        except Exception as err:
+            logger.error("error while deleting original file")
+            raise err
     except Exception as err:
         logger.error(f'create_app: file_from_minio {err}')
         return validation_error(str(err))
