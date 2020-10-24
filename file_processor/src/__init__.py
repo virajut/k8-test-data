@@ -320,12 +320,14 @@ class Processor:
                     "metadata_name": "metadata_" + self.hash + ".json",
                     "rebuild_xml":self.gw_rebuild_xml_name,
                     "rebuild_file":self.gw_rebuild_file_name,
+                    "original_file": self.main_filename,
                 }
             else:
                 payload = {
                     "s3_bucket": self.ext,
                     "minio_bucket": "processed",
                     "file": name + ".zip",
+                    "original_file":self.main_filename
                 }
             response = MQService.send(payload,self.isMalicious)
             meta = self.metadata
