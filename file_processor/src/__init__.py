@@ -102,31 +102,29 @@ class Processor:
         except Exception:
             self.filename = filename
             self.ext = None
-        try:
-            # convert file to hash
-            logger.info("opening file to read hash")
-            with open(file_path, mode='rb') as file:  # b is important -> binary
-                fileContent = file.read()
-            original_hash = hashlib.sha1(fileContent).hexdigest()
-            file.close()
-            logger.info("closing file")
-            self.hash = original_hash
-            logger.info(f" : {original_hash}")
-            # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
-            # Create directory for this file
-            self.directory = _dir + "/" + self.hash
-            Path(self.directory).mkdir(parents=True, exist_ok=True)
 
-            # Move current file to it's own directory
-            if self.ext:
-                self.file_path = self.directory + "/" + self.hash + "." + self.ext
-            else:
-                self.file_path = self.directory + "/" + self.hash
+        # convert file to hash
+        with open(file_path, mode='rb') as file:  # b is important -> binary
+            fileContent = file.read()
 
-            logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
-            os.rename(file_path, self.file_path)
-        except Exception as e:
-            raise e
+        original_hash = hashlib.sha1(fileContent).hexdigest()
+        self.hash = original_hash
+        logger.info(f""
+                    f" : {original_hash}")
+        # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
+
+        # Create directory for this file
+        self.directory = _dir + "/" + self.hash
+        Path(self.directory).mkdir(parents=True, exist_ok=True)
+
+        # Move current file to it's own directory
+        if self.ext:
+            self.file_path = self.directory + "/" + self.hash + "." + self.ext
+        else:
+            self.file_path = self.directory + "/" + self.hash
+
+        logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
+        os.rename(file_path, self.file_path)
 
     def check_virustotal(self):
         try:
@@ -369,7 +367,7 @@ class Processor:
     def delete_folder(self,path):
         try:
             logger.info("File Processing : Done")
-            logger.info(f"deleting  : {Config.download_path}")
+            logger.info(f"deleting  : {path}")
             #shutil.rmtree(self.directory)
             shutil.rmtree(Config.download_path)
         except Exception as err:
