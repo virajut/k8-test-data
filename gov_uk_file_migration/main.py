@@ -1,12 +1,11 @@
 import os
 import json
-import logging
+import logging as logger
 import requests
 from minio import Minio
 from src.config import Config
 
-logger = logging.getLogger("GW:s3")
-
+logger.basicConfig(level=logger.INFO)
 
 class GovUKFileMigration:
     """ Class to migrate gov_uk files from s3 through the standard k8-test-data file processing
@@ -100,13 +99,14 @@ class GovUKFileMigration:
 
         # extract file stats and return bucket name
         extension = path.split("/")[-1].split('.')[-1]
+        logger.info(f"Extension of file {extension}")
         if extension:
             bucket_name = extension.lower()
-            if len(bucket_name) > 62 or len(bucket_name) < 4:
+            if len(bucket_name) > 62:
                 bucket_name = 'miscellaneous'
         else:
             bucket_name = 'miscellaneous'
-
+        logger.info(f"Bucket_name for minio upload  {bucket_name}")
         return bucket_name
 
     def preprocess_files(self, file):
@@ -166,7 +166,6 @@ class GovUKFileMigration:
             "file": file.split('/')[-1],
             "bucket": bucket_name
         }
-
         try:
             file_processor_api = os.environ.get('file_processor_api', None)
             fp_response = requests.post(file_processor_api, json=payload)
@@ -195,6 +194,7 @@ if __name__ == '__main__':
         download_path = migration_obj.download_file(file_list[file_idx].split('/')[-1], file_list[file_idx])
 
         # pass the file to file processor as it downloads
+        logger.info(f"download_path of preprocess_files : {download_path}")
         migration_obj.preprocess_files(download_path)
 
 
