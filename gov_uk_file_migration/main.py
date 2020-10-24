@@ -3,7 +3,7 @@ import json
 import logging as logger
 import requests
 from minio import Minio
-from .src.config import Config
+from src.config import Config
 
 logger.basicConfig(level=logger.INFO)
 
