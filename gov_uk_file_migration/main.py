@@ -142,7 +142,7 @@ class GovUKFileMigration:
                 os.remove(download_path)
             except Exception as err:
                 logger.error((f'Error while deleted download upload path'))
-                raise err
+                pass
         except Exception as err:
             logger.error(f"preprocess_files {err}")
 
