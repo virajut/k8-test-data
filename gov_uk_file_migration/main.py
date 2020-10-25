@@ -1,6 +1,8 @@
 import os
 import json
 import logging as logger
+import shutil
+
 import requests
 from minio import Minio
 from src.config import Config
@@ -226,6 +228,15 @@ if __name__ == '__main__':
 
         # pass the file to file processor as it downloads
         migration_obj.preprocess_files(download_path)
+
+        try:
+            logger.info(f"deleting  : {Config.LOCAL_REPO_PATH}")
+            shutil.rmtree(Config.LOCAL_REPO_PATH)
+        except Exception as err:
+            logger.error((f'Error while deleted download upload path'))
+            raise err
+
+
 
     # except Exception as err:
     #     logger.info("Error in main")

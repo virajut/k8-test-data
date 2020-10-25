@@ -55,7 +55,7 @@ class Processor:
 
         lst=self.filename.split(".")
         if len(lst)==3:
-            name= self.filename.split(".")[0]
+            name= self.filename.split(".")[0]+self.filename.split(".")[1]
             ext = self.filename.split(".")[2]
         elif len(lst)==2:
             name, ext = self.filename.split(".")
@@ -95,7 +95,7 @@ class Processor:
             try:
                 list=filename.split(".")
                 if len(list)==3:
-                    self.filename=list[0]
+                    self.filename=list[0]+list[1]
                     self.ext=list[2]
                 elif len(list)==2:
                     self.filename, self.ext = filename.split(".")
