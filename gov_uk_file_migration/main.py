@@ -137,6 +137,12 @@ class GovUKFileMigration:
             processor_response = GovUKFileMigration.process_file(file=file, bucket_name=bucket_name)
             logger.info("GovUKFileMigration::preprocess_files File processor response: %s for "
                         "file %s and bucket name %s" % (processor_response, file, bucket_name))
+            try:
+                logger.info(f"deleting  file after preprocess: {download_path}")
+                os.remove(download_path)
+            except Exception as err:
+                logger.error((f'Error while deleted download upload path'))
+                raise err
         except Exception as err:
             logger.error(f"preprocess_files {err}")
 
@@ -229,12 +235,7 @@ if __name__ == '__main__':
         # pass the file to file processor as it downloads
         migration_obj.preprocess_files(download_path)
 
-        try:
-            logger.info(f"deleting  : {Config.LOCAL_REPO_PATH}")
-            shutil.rmtree(Config.LOCAL_REPO_PATH)
-        except Exception as err:
-            logger.error((f'Error while deleted download upload path'))
-            raise err
+
 
 
 
