@@ -5,8 +5,6 @@
 
 ## Build
 
-    `To build the Docker image and name it `gov-uk-migration` 
-
     `docker build -t gov-uk-migration .`
     
     `docker build -t storage:1.0 ../storage`

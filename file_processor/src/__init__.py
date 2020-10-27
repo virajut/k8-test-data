@@ -54,9 +54,13 @@ class Processor:
         self.main_filename=filename
 
         lst=self.filename.split(".")
-        if len(lst)==3:
-            name= self.filename.split(".")[0]+self.filename.split(".")[1]
-            ext = self.filename.split(".")[2]
+
+        if len(lst)>3:
+            name=self.filename.rsplit('.', 1)[0]
+            ext=self.filename.rsplit('.', 1)[1]
+        elif len(lst)==3:
+            name = self.filename.rsplit('.', 1)[0]
+            ext = self.filename.rsplit('.', 1)[1]
         elif len(lst)==2:
             name, ext = self.filename.split(".")
         else:
@@ -67,7 +71,7 @@ class Processor:
             logger.info(f"downloading file {filename} from minio")
             self.directory = Config.download_path + "/" + name
             self.minio.download_files(
-                bucket_name=ext, file_name=filename, download_path=Config.download_path
+                bucket_name=ext.lower(), file_name=filename, download_path=Config.download_path
             )
             self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
             logger.info(f'minio metadata : {self.minio_meta}')
@@ -94,9 +98,13 @@ class Processor:
 
             try:
                 list=filename.split(".")
-                if len(list)==3:
-                    self.filename=list[0]+list[1]
-                    self.ext=list[2]
+
+                if len(list)>3:
+                    self.filename=filename.rsplit('.', 1)[0]
+                    self.ext=filename.rsplit('.', 1)[1]
+                elif len(list)==3:
+                    self.filename = filename.rsplit('.', 1)[0]
+                    self.ext = filename.rsplit('.', 1)[1]
                 elif len(list)==2:
                     self.filename, self.ext = filename.split(".")
                 else:
@@ -220,11 +228,11 @@ class Processor:
             )
             logger.info(f"rebuild file response : {response} ")
             if response:
-                file = response.content
                 status = response.status_code
-                self.rebuild_hash = hashlib.sha1(file).hexdigest()
                 logger.info(f"status of rebuild file {response.status_code}")
                 if status == 200:
+                    file = response.content
+                    self.rebuild_hash = hashlib.sha1(file).hexdigest()
                     self.gw_rebuild_file_status = True
                     with open(self.directory + f"/rebuild_{rebuild_file_name}", "wb") as fp:
                         fp.write(file)
@@ -235,10 +243,10 @@ class Processor:
             )
             logger.info(f"rebuild xml_file response : {response} ")
             if response:
-                xml_file = response.content
                 status = response.status_code
                 logger.info(f"status of rebuild {response.status_code}")
                 if status == 200:
+                    xml_file = response.content
                     self.gw_rebuild_xml_status = True
                     with open(
                             self.directory + f"/rebuild_report_" + self.hash + ".xml", "wb"
@@ -313,7 +321,7 @@ class Processor:
             if self.isMalicious==False:
 
                 payload = {
-                    "s3_bucket": self.ext,
+                    "s3_bucket": self.ext.lower(),
                     "minio_bucket": "processed",
                     "folder": self.hash + "/",
                     "file": self.original_name.split("/")[-1],
@@ -324,7 +332,7 @@ class Processor:
                 }
             else:
                 payload = {
-                    "s3_bucket": self.ext,
+                    "s3_bucket": self.ext.lower(),
                     "minio_bucket": "processed",
                     "file": name + ".zip",
                     "original_file":self.main_filename

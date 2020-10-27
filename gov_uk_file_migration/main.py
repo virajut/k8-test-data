@@ -106,7 +106,7 @@ class GovUKFileMigration:
         logger.info(f"Extension of file {extension}")
         if extension:
             bucket_name = extension.lower()
-            if len(bucket_name) > 62:
+            if len(bucket_name) > 62 or len(bucket_name) < 3:
                 bucket_name = 'miscellaneous'
         else:
             bucket_name = 'miscellaneous'
