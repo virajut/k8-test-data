@@ -181,21 +181,6 @@ def create_app():
                                    filename=file_name,
                                    as_attachment=True)
 
-    # @app.route("/s3_upload", methods=['GET', 'POST'])
-    # def upload_file_to_s3():
-    #     try:
-    #         content = request.json
-    #         file = request.files.get("file")
-    #         if not file:
-    #             return jsonify({"message": "please supply a file"})
-    #         s3_client.upload_file(file=file,file_name=content['file_name'],bucket=content['bucket_name'])
-    #         ret = {"err": "none", 'details': content}
-    #     except Exception as error:
-    #         ret = {"err": "none", "details": error}
-    #         raise error
-    #
-    #     return Response(json.dumps(ret), mimetype='application/json')
-
     @app.route("/s3_download/<path:path>", methods=['GET', 'POST'])
     def download_files_from_s3(path):
         try:
@@ -242,6 +227,10 @@ def create_app():
 
             s3_client.upload_file(file=Config.s3_upload_path + "/" + file.filename, file_name=file.filename,
                                   bucket=bucket_name, folder=foler_name)
+            try:
+                os.remove(os.path.join(Config.s3_upload_path, file.filename))
+            except Exception as err:
+                logger.error((f"Storage: upload_to_s3 : removing original file {err}"))
             ret = {"err": "none", 'details': content}
             return ret
         except Exception as error:
