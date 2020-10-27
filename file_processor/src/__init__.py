@@ -67,7 +67,7 @@ class Processor:
             ext=None
             name = self.filename
         if ext:
-            self.bucket_name = ext
+            self.bucket_name = ext.lower()
             logger.info(f"downloading file {filename} from minio")
             self.directory = Config.download_path + "/" + name
             self.minio.download_files(
@@ -89,7 +89,18 @@ class Processor:
 
             return files
         else:
-            return None
+            self.bucket_name = "miscellaneous"
+            logger.info(f"downloading file {filename} from minio")
+            self.directory = Config.download_path + "/" + name
+            self.minio.download_files(
+                bucket_name=self.bucket_name, file_name=filename, download_path=Config.download_path
+            )
+            self.minio_meta = self.minio.get_stat(bucket_name=self.bucket_name, file_name=filename)
+            logger.info(f'minio metadata : {self.minio_meta}')
+
+            files.append(Config.download_path + "/" + filename)
+
+            return files
 
     def set_current_file(self, file_path):
         try:
@@ -114,6 +125,7 @@ class Processor:
             except Exception:
                 self.filename = filename
                 self.ext = None
+
             if self.ext:
                 # convert file to hash
                 with open(file_path, mode='rb') as file:  # b is important -> binary
@@ -137,6 +149,31 @@ class Processor:
 
                 logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
                 os.rename(file_path, self.file_path)
+
+            else:
+                # convert file to hash
+                with open(file_path, mode='rb') as file:  # b is important -> binary
+                    fileContent = file.read()
+
+                original_hash = hashlib.sha1(fileContent).hexdigest()
+                self.hash = original_hash
+                logger.info(f""
+                            f" : {original_hash}")
+                # self.hash = hashlib.sha1(str(self.filename).encode()).hexdigest()
+
+                # Create directory for this file
+                self.directory = _dir + "/" + self.hash
+                Path(self.directory).mkdir(parents=True, exist_ok=True)
+
+                # Move current file to it's own directory
+                if self.ext:
+                    self.file_path = self.directory + "/" + self.hash + "." + self.ext
+                else:
+                    self.file_path = self.directory + "/" + self.hash
+
+                logger.info(f'renaming of file {file_path} to {self.file_path} after sha1 hashing')
+                os.rename(file_path, self.file_path)
+
         except Exception as err:
             logger.info("errro in setting path")
             raise err
@@ -317,11 +354,15 @@ class Processor:
         try:
             logger.info("Sending file to rabbitmq for s3 sync, %s" % self.directory)
             name = self.directory.split("/")[-1]
+            if self.ext:
+                s3_bucket =self.ext.lower()
+            else:
+                s3_bucket="miscellaneous"
 
             if self.isMalicious==False:
 
                 payload = {
-                    "s3_bucket": self.ext.lower(),
+                    "s3_bucket": s3_bucket,
                     "minio_bucket": "processed",
                     "folder": self.hash + "/",
                     "file": self.original_name.split("/")[-1],
@@ -332,7 +373,7 @@ class Processor:
                 }
             else:
                 payload = {
-                    "s3_bucket": self.ext.lower(),
+                    "s3_bucket": s3_bucket,
                     "minio_bucket": "processed",
                     "file": name + ".zip",
                     "original_file":self.main_filename
@@ -344,9 +385,9 @@ class Processor:
             if response.status_code == 200:
                 #meta['path'] = self.ext + "/" + name + ".zip"
                 if self.isMalicious == False:
-                    meta['path']=self.ext +"/"+ self.hash
+                    meta['path']= s3_bucket +"/"+ self.hash
                 else:
-                    meta['path'] = self.ext + "/" + name + ".zip"
+                    meta['path'] = s3_bucket + "/" + name + ".zip"
                 logger.info(f"s3 upload_path : { meta['path']}")
                 self.metadata = meta
             try:

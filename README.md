@@ -158,7 +158,7 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
     
     Setup your db 
     Name : Anythin you want
-    host: <IP>
+    host: <EC2 IP>
     port:5432
     username : postgres
     password : toor
@@ -170,7 +170,7 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
 #Minio
     Minio will be having unprocessed files which are failed in file processor
     
-    minio browser url : http://<IP>:9001/
+    minio browser url : http://<EC2 IP>:9001/
     username : minio1
     password: minio1@123
     
