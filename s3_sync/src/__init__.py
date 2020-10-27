@@ -111,28 +111,31 @@ def sync_folder_to_s3():
 
         files=[]
         files.extend([file_name,metadata_name,rebuild_xml,rebuild_file,])
-        for f in files:
-            if f:
-                logger.info(f"file {f} to be uploaded to s3 in folder {folder_name}")
-                folder_path=Config.download_path+"/"+folder_name.split("/")[0]
-                if not os.path.exists(folder_path):
-                    os.makedirs(Config.download_path+"/"+folder_name.split("/")[0])
-                file_from_minio = minio_client.download_files(bucket_name=file_to_fetch['minio_bucket'],
-                                                          file_name=folder_name+f,
-                                                          download_path=Config.download_path)
-                logger.info(f'file_from_minio : {file_from_minio}')
-                s3_client.upload_file(file_path=file_from_minio, file_name=folder_name+f,
-                                      bucket=file_to_fetch['s3_bucket'])
-                logger.info(f's3 path : {folder_name}{f}')
-                logger.info(f"deleting object {file_to_fetch['minio_bucket']}/{folder_name+f}")
-                minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'],object_name=folder_name+f)
-                logger.info(f"Deleted object {folder_name}/{f}")
+        try:
+            for f in files:
+                if f:
+                    logger.info(f"file {f} to be uploaded to s3 in folder {folder_name}")
+                    folder_path=Config.download_path+"/"+folder_name.split("/")[0]
+                    if not os.path.exists(folder_path):
+                        os.makedirs(Config.download_path+"/"+folder_name.split("/")[0])
+                    file_from_minio = minio_client.download_files(bucket_name=file_to_fetch['minio_bucket'],
+                                                              file_name=folder_name+f,
+                                                              download_path=Config.download_path)
+                    logger.info(f'file_from_minio : {file_from_minio}')
+                    s3_client.upload_file(file_path=file_from_minio, file_name=folder_name+f,
+                                          bucket=file_to_fetch['s3_bucket'])
+                    logger.info(f's3 path : {folder_name}{f}')
+                    logger.info(f"deleting object {file_to_fetch['minio_bucket']}/{folder_name+f}")
+                    minio_client.delete_file(bucket_name=file_to_fetch['minio_bucket'],object_name=folder_name+f)
+                    logger.info(f"Deleted object {folder_name}/{f}")
 
-                try:
-                    shutil.rmtree(folder_path)
-                except Exception as err:
-                    logger.error((f'Error while deleted download upload path'))
-                    raise err
+                    try:
+                        shutil.rmtree(folder_path)
+                    except Exception as err:
+                        logger.error((f'Error while deleted download upload path'))
+                        raise err
+        except Exception as err:
+            logger.error((f'Error while deleting'))
         try:
             file = file_name
             logger.info(f"Deleting object {file}")
