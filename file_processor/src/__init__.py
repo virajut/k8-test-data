@@ -427,7 +427,7 @@ class Processor:
             logger.info("File Processing : Done")
             logger.info(f"deleting  : {path}")
             #shutil.rmtree(self.directory)
-            shutil.rmtree(Config.download_path)
+            shutil.rmtree(path)
         except Exception as err:
             logger.error((f'Error while deleted download upload path'))
             raise err
