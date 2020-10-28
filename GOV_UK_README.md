@@ -4,9 +4,20 @@
 
     # Gov-UK files migrator and processor
 
+##Pre-requisites
+
+###EC2
+    Instance type - m5.xlarge
+    Volume size - 48 gb
+    custom security group
+        minio - 9001
+        postgres- 5432
+        
+        
 ## Usage
 
     * Set .env variables from .env.sample
+
 
 ## Build
 
@@ -64,7 +75,15 @@
 
     * Storage error in ec2
     
+        Need to delete all data once it is processed.  
+        If there is error for particular file format or type,it wont be deleted and it might stay in container leading to storage error(you will find it in minio)
+        
+   
     * icap Rebuild license error
+    
+        take latest icap libglasswall.classic.so and update in k8-test-data/glasswall_rebuild/Library/libglasswall.classic.so
+
+        
     
 
 
