@@ -77,39 +77,6 @@ Malware Public Repositories ( Proceed with caution when handling live malware) :
 
 Public malware reference - https://cyberlab.pacific.edu/resources/malware-samples-for-students
 Note :  http://contagiodump.blogspot.com/ in above public reference not implemented since it is paid service and password for malware zip is not availble
-
-
-
-#To run GOV_UK FILES please refer gov_uk_file_migration/readme.md
-
-    # Gov-UK files migrator and processor
-
-## Usage
-* Set .env variables from .env.sample
-
-## Build
-
-    `docker build -t gov-uk-migration .`
-    
-    `docker build -t storage:1.0 ../storage`
-    
-    `docker build -t k8-file-processor:1.0 ../file_processor`
-    
-    `docker build -t glasswall-rebuild:1.0 ../glasswall_rebuild`
-    
-    `docker build -t k8-s3-sync ../s3_sync`
-   
-    
-## To run
-
-    `docker-compose up -d postgres`
-    
-    `docker-compose up -d minio`
-    
-    `docker-compose up -d storage-adapter`
-    
-    `docker-compose up`
-    
     
 #Scraper and Virus file processing steps
 ## Build
@@ -173,6 +140,14 @@ Note :  http://contagiodump.blogspot.com/ in above public reference not implemen
     minio browser url : http://<EC2 IP>:9001/
     username : minio1
     password: minio1@123
+    
+##Possible Errors
+
+    * Storage error in ec2
+    
+    * icap Rebuild license error
+    
+
     
 
 
