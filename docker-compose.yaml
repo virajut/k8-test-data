@@ -30,16 +30,22 @@ services:
       timeout: 10s
       retries: 5
 
-  # storage-adapter:
-  #   image: storage:1.0
-  #   build:
-  #     context: .
-  #     dockerfile: storage/Dockerfile
-  #   env_file:
-  #     - storage/.env
-  #   ports:
-  #     - 50052:50052
-  #     - 5005:5002
+  storage-adapter:
+    image: storage:1.0
+    build:
+      context: .
+      dockerfile: storage/Dockerfile
+    environment:
+      - MINIO_HOSTNAME:minio:9001
+      - MINIO_ACCESS_KEY_ID:minio1
+      - MINIO_SECRET_ACCESS_KEY:minio1@123
+      - rabbit_mq_api:http://rabbitmq-process:5006/publish
+      - PYTHONUNBUFFERED:0
+      - S3_BUCKET:k8-test-data
+      - S3_SUB_FOLDER_PREFIX:gov_uk/
+    ports:
+    - 50052:50052
+    - 5005:5002
 
 
   # scrapyd:
@@ -69,22 +75,33 @@ services:
   #     - rabbitmq
   #     - scrapyd
 
-  # rabbitmq-process:
-  #   image: rabbit-mq:1.0
-  #   build:
-  #     context: .
-  #     dockerfile: rabbitmq/Dockerfile
-  #   env_file:
-  #     - rabbitmq/.env
-  #   ports:
-  #     - 50056:50056
-  #     - 5006:5006
-  #   restart: on-failure
-  #   depends_on:
-  #     - rabbitmq
-  #     - minio
-  #   links:
-  #     - rabbitmq
+  rabbitmq-process:
+    image: rabbit-mq:1.0
+    build:
+      context: .
+      dockerfile: rabbitmq/Dockerfile
+    environment:
+      - MINIO_ENDPOINT:minio:9000
+      - MINIO_ACCESS_KEY_ID:minio1
+      - MINIO_SECRET_ACCESS_KEY:minio1@123
+      - MINIO_SECURE:False
+      - MQ_USERNAME:guest
+      - MQ_PASSWORD:guest
+      - MQ_HOST:rabbitmq
+      - MQ_PORT:5672
+      - MQ_QUEUE:queue01
+      - MQ_ROUTING_KEY:queue01
+      - s3_sync_api:http://k8-s3-sync:5004/tos3
+      - file_processor_api:http://k8-file-processor:5000/process
+    ports:
+      - 50056:50056
+      - 5006:5006
+    restart: on-failure
+    depends_on:
+      - rabbitmq
+      - minio
+    links:
+      - rabbitmq
 
   # k8-file-distribution:
   #   image: k8-file-distribution
