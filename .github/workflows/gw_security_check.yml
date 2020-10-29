@@ -22,7 +22,7 @@ jobs:
         with: 
           repository: virajut/security_checks
           token: ${{ secrets.MY_PAT }}
-          path: ./security_checks/
+          path: security_checks
 
       - name: Install script dependencies
         run: |
