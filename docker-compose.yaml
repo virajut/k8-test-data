@@ -75,33 +75,34 @@ services:
   #     - rabbitmq
   #     - scrapyd
 
-  rabbitmq-process:
-    image: rabbit-mq:1.0
-    build:
-      context: .
-      dockerfile: rabbitmq/Dockerfile
-    environment:
-      - MINIO_ENDPOINT:minio:9000
-      - MINIO_ACCESS_KEY_ID:minio1
-      - MINIO_SECRET_ACCESS_KEY:minio1@123
-      - MINIO_SECURE:False
-      - MQ_USERNAME:guest
-      - MQ_PASSWORD:guest
-      - MQ_HOST:rabbitmq
-      - MQ_PORT:5672
-      - MQ_QUEUE:queue01
-      - MQ_ROUTING_KEY:queue01
-      - s3_sync_api:http://k8-s3-sync:5004/tos3
-      - file_processor_api:http://k8-file-processor:5000/process
-    ports:
-      - 50056:50056
-      - 5006:5006
-    restart: on-failure
-    depends_on:
-      - rabbitmq
-      - minio
-    links:
-      - rabbitmq
+  # rabbitmq-process:
+  #   image: rabbit-mq:1.0
+  #   container_name: gw_testdata_rabbitmq_process
+  #   build:
+  #     context: .
+  #     dockerfile: rabbitmq/Dockerfile
+  #   environment:
+  #     - MINIO_ENDPOINT:minio:9000
+  #     - MINIO_ACCESS_KEY_ID:minio1
+  #     - MINIO_SECRET_ACCESS_KEY:minio1@123
+  #     - MINIO_SECURE:False
+  #     - MQ_USERNAME:guest
+  #     - MQ_PASSWORD:guest
+  #     - MQ_HOST:rabbitmq
+  #     - MQ_PORT:5672
+  #     - MQ_QUEUE:queue01
+  #     - MQ_ROUTING_KEY:queue01
+  #     - s3_sync_api:http://k8-s3-sync:5004/tos3
+  #     - file_processor_api:http://k8-file-processor:5000/process
+  #   ports:
+  #     - 50056:50056
+  #     - 5006:5006
+  #   restart: on-failure
+  #   depends_on:
+  #     - rabbitmq
+  #     - minio
+  #   links:
+  #     - rabbitmq
 
   # k8-file-distribution:
   #   image: k8-file-distribution
