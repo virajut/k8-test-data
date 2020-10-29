@@ -4,4 +4,4 @@ WORKDIR /usr/src/app
 COPY rabbitmq/requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD [ "python", "main.py" ]
+CMD [ "python", "rabbitmq/main.py" ]
