@@ -27,7 +27,7 @@ jobs:
           sudo apt-get install python3-dev python3-pip python3-venv python3-wheel -y
           pip3 install wheel
           pip3 install setuptools
-          pip3 install -r security_checks/requirements.txt
+          pip3 install -r ./k8-test-data/security_checks/requirements.txt
         
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -46,4 +46,4 @@ jobs:
       - name: Run the security check script
         run: |
           export SLACK_API_TOKEN=${{ secrets.SLACK_API_TOKEN }}
-          python3 ./security_checks/security_checks.py
+          python3 ./k8-test-data/security_checks/security_checks.py
