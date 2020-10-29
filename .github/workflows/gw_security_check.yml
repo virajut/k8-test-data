@@ -15,7 +15,7 @@ jobs:
           sudo mkdir security_checks
 
       - name: Checkout Security Scripts
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
         with: 
           repository: virajut/security_checks
           token: ${{ secrets.MY_PAT }}
