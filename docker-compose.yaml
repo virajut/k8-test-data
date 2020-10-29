@@ -20,7 +20,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     hostname: k8-rabbit
-    container_name: gw_minio
+    container_name: gw_rabbitmq
     ports:
       - 5672:5672
       - 15672:15672
@@ -127,7 +127,7 @@ services:
 
   postgres:
     image: postgres
-    container_name: gw_minio
+    container_name: gw_postgres
     environment:
       POSTGRES_DB: test-data
       POSTGRES_USER: postgres
