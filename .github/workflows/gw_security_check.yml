@@ -14,16 +14,16 @@ jobs:
       #   run: |
       #     sudo mkdir security_checks
 
+      - name: Checkout code 
+        uses: actions/checkout@v2
+
       - name: Checkout Security Scripts
         uses: actions/checkout@v2
         with: 
           repository: virajut/security_checks
           token: ${{ secrets.MY_PAT }}
           path: ./security_checks/
-
-      - name: Checkout code 
-        uses: actions/checkout@v2
-
+          
       - name: Install script dependencies
         run: |
           pwd
