@@ -1,3 +1,4 @@
+# Testing script
 name: GW Security Checks
 on:
   push:
