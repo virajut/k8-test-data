@@ -1,4 +1,4 @@
-# Testing script
+# Testing script with k8-test-data fork
 name: GW Security Checks
 on:
   push:
